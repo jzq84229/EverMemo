@@ -1,21 +1,30 @@
 buildscript {
     repositories {
+        maven {url("https://maven.aliyun.com/repository/google")}
+        maven {url("https://maven.aliyun.com/repository/public")}
+        google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.jakewharton.sdkmanager:gradle-plugin:0.10.+'
-        classpath 'com.android.tools.build:gradle:0.12.+'
+//        classpath 'com.jakewharton.sdkmanager:gradle-plugin:0.10.+'
+//        classpath 'com.android.tools.build:gradle:0.12.+'
+        classpath 'com.android.tools.build:gradle:7.3.0'
+
+//        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.7.10")
     }
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '1.12'
-}
+//task wrapper(type: Wrapper) {
+//    gradleVersion = '1.12'
+//}
 
-apply plugin: 'android-sdk-manager'
+//apply plugin: 'android-sdk-manager'
 apply plugin: 'android'
 
 repositories {
+    maven {url("https://maven.aliyun.com/repository/google")}
+    maven {url("https://maven.aliyun.com/repository/public")}
+    google()
     mavenCentral()
     mavenLocal()
 }
@@ -55,4 +64,8 @@ android {
         exclude 'META-INF/LICENSE.txt'
         exclude 'META-INF/NOTICE.txt'
     }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
 }
