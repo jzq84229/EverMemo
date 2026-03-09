@@ -2,6 +2,7 @@ package com.zhan_dui.evermemo;
 
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.List;
 
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
@@ -19,13 +20,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.app.LoaderManager.LoaderCallbacks;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
-import android.support.v4.widget.CursorAdapter;
-import android.support.v7.app.ActionBarActivity;
-import android.support.v7.view.ActionMode;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -40,7 +37,8 @@ import com.evernote.client.android.EvernoteSession;
 import com.huewu.pla.lib.MultiColumnListView;
 import com.umeng.analytics.MobclickAgent;
 import com.umeng.update.UmengUpdateAgent;
-import com.zhan_dui.adapters.MemosAdapter;
+import com.zhan_dui.adapters.MemoListAdapter;
+import com.zhan_dui.data.Memo;
 import com.zhan_dui.adapters.MemosAdapter.ItemLongPressedLisener;
 import com.zhan_dui.adapters.MemosAdapter.onItemSelectLisener;
 import com.zhan_dui.data.MemoDB;
@@ -49,13 +47,14 @@ import com.zhan_dui.sync.Evernote;
 import com.zhan_dui.utils.Logger;
 import com.zhan_dui.utils.MarginAnimation;
 
-public class StartActivity extends ActionBarActivity implements
-		LoaderCallbacks<Cursor>, OnClickListener, ItemLongPressedLisener,
-		onItemSelectLisener {
+public class StartActivity extends AppCompatActivity implements
+		OnClickListener, ItemLongPressedLisener,
+		onItemSelectLisener, MemoListAdapter.ItemLongPressedListener,
+		MemoListAdapter.OnItemSelectListener {
 
 	private MultiColumnListView mMemosGrid;
 	private Context mContext;
-	private MemosAdapter mMemosAdapter;
+	private MemoListAdapter mMemosAdapter;
 	private LinearLayout mBindEvernotePanel;
 	private SharedPreferences mSharedPreferences;
 	private Button mBindEvernote;
@@ -64,6 +63,7 @@ public class StartActivity extends ActionBarActivity implements
 	public static String sShownRate = "ShownRate";
 	public static String sStartCount = "StartCount";
 	private Menu mMenu;
+	private MemoViewModel mMemoViewModel;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -78,12 +78,15 @@ public class StartActivity extends ActionBarActivity implements
 		mBindEvernote = (Button) findViewById(R.id.bind_evernote);
 		mBindEvernotePandelHeight = mBindEvernotePanel.getLayoutParams().height;
 
-		LoaderManager manager = getSupportLoaderManager();
-		mMemosAdapter = new MemosAdapter(mContext, null,
-				CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER, this, this);
+		mMemosAdapter = new MemoListAdapter(mContext, this, this);
 		mMemosGrid.setAdapter(mMemosAdapter);
 
-		manager.initLoader(1, null, this);
+		mMemoViewModel = new ViewModelProvider(this).get(MemoViewModel.class);
+		mMemoViewModel.getAllMemos().observe(this, memos -> {
+			// Update adapter with new data
+			updateMemosAdapter(memos);
+		});
+
 		mSharedPreferences = PreferenceManager
 				.getDefaultSharedPreferences(mContext);
 
@@ -124,26 +127,6 @@ public class StartActivity extends ActionBarActivity implements
 		UmengUpdateAgent.update(this);
 	}
 
-	@Override
-	public Loader<Cursor> onCreateLoader(int arg0, Bundle arg1) {
-		CursorLoader cursorLoader = new CursorLoader(mContext,
-				MemoProvider.MEMO_URI, null, null, null, MemoDB.UPDATEDTIME
-						+ " desc");
-		return cursorLoader;
-	}
-
-	@Override
-	public void onLoadFinished(Loader<Cursor> arg0, Cursor cursor) {
-		MatrixCursor matrixCursor = new MatrixCursor(new String[] { "_id" });
-		matrixCursor.addRow(new String[] { "0" });
-		Cursor c = new MergeCursor(new Cursor[] { matrixCursor, cursor });
-		mMemosAdapter.swapCursor(c);
-	}
-
-	@Override
-	public void onLoaderReset(Loader<Cursor> arg0) {
-		mMemosAdapter.swapCursor(null);
-	}
 
 	@Override
 	public void onClick(View v) {
@@ -406,5 +389,13 @@ public class StartActivity extends ActionBarActivity implements
 	public void onCancelSelect() {
 		updateActionMode();
 	}
+
+	private void updateMemosAdapter(List<Memo> memos) {
+		if (memos == null) {
+			return;
+		}
+		mMemosAdapter.setMemos(memos);
+	}
+
 
 }

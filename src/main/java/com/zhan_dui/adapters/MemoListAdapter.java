@@ -1,0 +1,309 @@
+package com.zhan_dui.adapters;
+
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Typeface;
+import android.text.Html;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
+import android.widget.TextView;
+
+import com.zhan_dui.data.Memo;
+import com.zhan_dui.evermemo.MemoActivity;
+import com.zhan_dui.evermemo.R;
+import com.zhan_dui.utils.DateHelper;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+/**
+ * Adapter for displaying memos in a list/grid without Cursor dependency.
+ */
+public class MemoListAdapter extends BaseAdapter implements View.OnClickListener, View.OnLongClickListener {
+
+    public interface ItemLongPressedListener {
+        void startActionMode();
+    }
+
+    public interface OnItemSelectListener {
+        void onSelect();
+        void onCancelSelect();
+    }
+
+    private final Context context;
+    private final LayoutInflater layoutInflater;
+    private final Typeface robotoThin;
+
+    private List<Memo> memos = new ArrayList<>();
+    private boolean checkMode = false;
+    private HashMap<Integer, Memo> checkedItems = new HashMap<>();
+
+    private ItemLongPressedListener itemLongPressedLisener;
+    private OnItemSelectListener onItemSelectLisener;
+
+    public MemoListAdapter(Context context, ItemLongPressedListener itemLongPressedLisener,
+                          OnItemSelectListener selectLisener) {
+        this.context = context;
+        this.layoutInflater = LayoutInflater.from(context);
+        this.robotoThin = Typeface.createFromAsset(context.getAssets(), "fonts/Roboto-Thin.ttf");
+        this.itemLongPressedLisener = itemLongPressedLisener;
+        this.onItemSelectLisener = selectLisener;
+    }
+
+    /**
+     * Update the adapter with new memo data
+     */
+    public void setMemos(List<Memo> memos) {
+        if (memos == null) {
+            this.memos = new ArrayList<>();
+        } else {
+            this.memos = memos;
+        }
+        notifyDataSetChanged();
+    }
+
+    /**
+     * Add a special "add memo" item at position 0
+     */
+    private int getItemCountWithAdd() {
+        return memos.size() + 1; // +1 for the "add" item
+    }
+
+    @Override
+    public int getCount() {
+        return getItemCountWithAdd();
+    }
+
+    @Override
+    public Object getItem(int position) {
+        if (position == 0) {
+            return null; // "add" item
+        }
+        int memoIndex = position - 1;
+        if (memoIndex >= 0 && memoIndex < memos.size()) {
+            return memos.get(memoIndex);
+        }
+        return null;
+    }
+
+    @Override
+    public long getItemId(int position) {
+        if (position == 0) {
+            return 0; // "add" item ID
+        }
+        int memoIndex = position - 1;
+        if (memoIndex >= 0 && memoIndex < memos.size()) {
+            return memos.get(memoIndex).getId();
+        }
+        return -1;
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return position == 0 ? 0 : 1; // 0 = add item, 1 = memo item
+    }
+
+    @Override
+    public int getViewTypeCount() {
+        return 2; // add item and memo item
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        int viewType = getItemViewType(position);
+
+        if (viewType == 0) {
+            // "Add memo" item
+            return createAddItemView(convertView, parent);
+        } else {
+            // Memo item
+            int memoIndex = position - 1;
+            if (memoIndex >= 0 && memoIndex < memos.size()) {
+                Memo memo = memos.get(memoIndex);
+                return createMemoItemView(memoIndex, memo, convertView, parent);
+            }
+        }
+
+        return convertView != null ? convertView : createEmptyView(parent);
+    }
+
+    private View createAddItemView(View convertView, ViewGroup parent) {
+        if (convertView != null && convertView.getTag(R.string.memo_first) != null &&
+            (Boolean) convertView.getTag(R.string.memo_first)) {
+            // Reuse the existing view
+            return convertView;
+        }
+
+        View view = layoutInflater.inflate(R.layout.memo_add, parent, false);
+        view.setTag(R.string.memo_first, true);
+        TextView plusTextView = view.findViewById(R.id.plus);
+        if (plusTextView != null) {
+            plusTextView.setTypeface(robotoThin);
+        }
+        view.setOnClickListener(this);
+        return view;
+    }
+
+    private View createMemoItemView(int position, Memo memo, View convertView, ViewGroup parent) {
+        View view;
+        boolean isFirst = false; // Not used in this adapter, but kept for compatibility
+
+        if (convertView != null && convertView.getTag(R.string.memo_first) != null) {
+            isFirst = (Boolean) convertView.getTag(R.string.memo_first);
+            if (isFirst && position != 0) {
+                view = layoutInflater.inflate(R.layout.memo_item, parent, false);
+            } else if (!isFirst && position == 0) {
+                view = layoutInflater.inflate(R.layout.memo_item, parent, false);
+            } else {
+                view = convertView;
+            }
+        } else {
+            view = layoutInflater.inflate(R.layout.memo_item, parent, false);
+        }
+
+        view.setTag(R.string.memo_first, position == 0);
+
+        // Bind data
+        TextView contentTextView = view.findViewById(R.id.content);
+        TextView dateTextView = view.findViewById(R.id.date);
+        View hoverView = view.findViewById(R.id.hover);
+        View uploadView = view.findViewById(R.id.uploading);
+
+        if (contentTextView != null) {
+            contentTextView.setText(Html.fromHtml(memo.getContent()));
+        }
+
+        if (dateTextView != null) {
+            dateTextView.setText(DateHelper.getGridDate(context, memo.getCreatedTime()));
+        }
+
+        if (hoverView != null) {
+            hoverView.setTag(R.string.memo_data, memo);
+            hoverView.setTag(R.string.memo_id, memo.getId());
+            hoverView.setTag(R.string.memo_position, position + 1); // +1 because position 0 is "add" item
+            hoverView.setOnClickListener(this);
+            hoverView.setOnLongClickListener(this);
+
+            // Set background based on check mode
+            if (checkMode) {
+                if (isChecked(memo.getId())) {
+                    hoverView.setBackgroundResource(R.drawable.hover_multi_background_normal);
+                } else {
+                    hoverView.setBackgroundResource(R.drawable.hover_border_normal);
+                }
+            } else {
+                hoverView.setBackgroundResource(R.drawable.hover_background);
+            }
+        }
+
+        if (uploadView != null) {
+            uploadView.setVisibility(memo.isSyncingUp() ? View.VISIBLE : View.INVISIBLE);
+        }
+
+        return view;
+    }
+
+    private View createEmptyView(ViewGroup parent) {
+        return layoutInflater.inflate(R.layout.memo_item, parent, false);
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v.getTag(R.string.memo_first) != null && (Boolean) v.getTag(R.string.memo_first)) {
+            // "Add memo" item clicked
+            context.startActivity(new Intent(context, MemoActivity.class));
+        } else {
+            switch (v.getId()) {
+                case R.id.hover:
+                    Memo memo = (Memo) v.getTag(R.string.memo_data);
+                    if (checkMode) {
+                        toggleCheckedId(memo.getId(), memo, v);
+                    } else {
+                        Intent intent = new Intent(context, MemoActivity.class);
+                        intent.putExtra("memo", memo);
+                        context.startActivity(intent);
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+
+    @Override
+    public boolean onLongClick(View v) {
+        if (!checkMode) {
+            if (itemLongPressedLisener != null) {
+                itemLongPressedLisener.startActionMode();
+            }
+            setCheckMode(true);
+        }
+        Memo memo = (Memo) v.getTag(R.string.memo_data);
+        toggleCheckedId(memo.getId(), memo, v);
+        return true;
+    }
+
+    // Check mode management
+    public void setCheckMode(boolean check) {
+        checkMode = check;
+        if (!checkMode) {
+            checkedItems.clear();
+        }
+        notifyDataSetChanged();
+    }
+
+    public void toggleCheckedId(int id, Memo memo, View v) {
+        if (checkedItems.containsKey(id)) {
+            checkedItems.remove(id);
+            if (onItemSelectLisener != null) {
+                onItemSelectLisener.onCancelSelect();
+            }
+        } else {
+            if (checkedItems.isEmpty()) {
+                checkedItems = new HashMap<>();
+            }
+            checkedItems.put(id, memo);
+            if (onItemSelectLisener != null) {
+                onItemSelectLisener.onSelect();
+            }
+        }
+        notifyDataSetChanged();
+    }
+
+    public boolean isChecked(int id) {
+        return checkedItems.containsKey(id);
+    }
+
+    public int getSelectedCount() {
+        return checkedItems.size();
+    }
+
+    public void deleteSelectedMemos() {
+        if (checkedItems.isEmpty()) {
+            return;
+        }
+
+        // In a real implementation, this would delete from the database
+        // For now, just remove from the list
+        for (Integer id : checkedItems.keySet()) {
+            // Remove memo with this ID from the list
+            for (int i = 0; i < memos.size(); i++) {
+                if (memos.get(i).getId() == id) {
+                    memos.remove(i);
+                    break;
+                }
+            }
+        }
+        checkedItems.clear();
+
+        if (onItemSelectLisener != null) {
+            onItemSelectLisener.onCancelSelect();
+        }
+
+        notifyDataSetChanged();
+    }
+
+}

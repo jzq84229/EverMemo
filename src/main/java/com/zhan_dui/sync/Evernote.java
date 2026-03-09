@@ -1,5 +1,6 @@
 package com.zhan_dui.sync;
 
+import com.zhan_dui.evermemo.BuildConfig;
 import java.util.List;
 import java.util.Map;
 
@@ -41,8 +42,8 @@ public class Evernote {
 
 	public String LogTag = "EverNote";
 	public Context mContext;
-	private static final String CONSUMER_KEY = "milkliker";
-	private static final String CONSUMER_SECRET = "f479109c186d284b";
+	private static final String CONSUMER_KEY = BuildConfig.EVERNOTE_CONSUMER_KEY;
+	private static final String CONSUMER_SECRET = BuildConfig.EVERNOTE_CONSUMER_SECRET;
 	private static final String NOTEBOOK_NAME = "EverMemo";
 	public static final String EVERNOTE_TOKEN = "Evernote_Token";
 	public static final String EVERNOTE_TOKEN_TIME = "Evernote_Token_Time";

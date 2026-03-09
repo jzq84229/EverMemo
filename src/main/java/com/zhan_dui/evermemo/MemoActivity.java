@@ -13,7 +13,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v7.app.ActionBarActivity;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
 import android.text.Html;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -31,13 +32,14 @@ import com.zhan_dui.data.MemoDB;
 import com.zhan_dui.data.MemoProvider;
 import com.zhan_dui.sync.Evernote;
 
-public class MemoActivity extends ActionBarActivity implements OnClickListener,
+public class MemoActivity extends AppCompatActivity implements OnClickListener,
 		OnKeyListener {
 
 	private EditText mContentEditText;
 	private Memo memo;
 	private boolean mCreateNew;
 	private Context mContext;
+	private MemoViewModel mMemoViewModel;
 
 	private String mLastSaveContent;
 
@@ -84,6 +86,7 @@ public class MemoActivity extends ActionBarActivity implements OnClickListener,
 		}
 
 		mContentEditText.setOnKeyListener(this);
+		mMemoViewModel = new ViewModelProvider(this).get(MemoViewModel.class);
 		mEvernote = new Evernote(mContext);
 		findViewById(R.id.edit_container).setOnClickListener(this);
 	}
@@ -223,24 +226,20 @@ public class MemoActivity extends ActionBarActivity implements OnClickListener,
 		}
 		memo.setContent(Html.toHtml(mContentEditText.getText()));
 		memo.setCursorPosition(mContentEditText.getSelectionStart());
-		ContentValues values = memo.toContentValues();
-		values.put(MemoDB.SYNCSTATUS, Memo.NEED_SYNC_UP);
-		values.put(MemoDB.UPDATEDTIME, new Date().getTime());
+		memo.setUpdatedTime(new Date().getTime());
 		if (mCreateNew) {
-			mCreateNew = false;
-			Uri retUri = getContentResolver().insert(MemoProvider.MEMO_URI,
-					values);
-			memo.setId(Integer.valueOf(retUri.getLastPathSegment()));
+			Uri resultUri = mMemoViewModel.createMemo(memo.getContent());
+			if (resultUri != null) {
+				mCreateNew = false;
+				memo.setId(Integer.parseInt(resultUri.getLastPathSegment()));
+			}
 		} else {
 			if (mContentEditText.getText().toString().trim().length() == 0) {
-				getContentResolver().delete(
-						ContentUris.withAppendedId(MemoProvider.MEMO_URI,
-								memo.getId()), null, null);
+				// Empty content means delete
+				mMemoViewModel.deleteMemo(memo.getId());
 				mCreateNew = true;
 			} else {
-				getContentResolver().update(
-						ContentUris.withAppendedId(MemoProvider.MEMO_URI,
-								memo.getId()), values, null, null);
+				mMemoViewModel.updateMemo(memo);
 			}
 		}
 		if (toLeave && mTextChanged) {
@@ -327,9 +326,7 @@ public class MemoActivity extends ActionBarActivity implements OnClickListener,
 
 	private void deleteAndLeave() {
 		if (memo.getId() != 0) {
-			getContentResolver().delete(
-					ContentUris.withAppendedId(MemoProvider.MEMO_URI,
-							memo.getId()), null, null);
+			mMemoViewModel.deleteMemo(memo.getId());
 			mEvernote.sync(true, false, null);
 		}
 		getWindow().setSoftInputMode(

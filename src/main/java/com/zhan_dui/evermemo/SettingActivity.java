@@ -9,7 +9,7 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.support.v7.app.ActionBarActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.view.KeyEvent;
 import android.view.MenuItem;
 import android.view.View;
@@ -27,7 +27,7 @@ import com.umeng.analytics.MobclickAgent;
 import com.zhan_dui.sync.Evernote;
 import com.zhan_dui.sync.Evernote.EvernoteLoginCallback;
 
-public class SettingActivity extends ActionBarActivity implements
+public class SettingActivity extends AppCompatActivity implements
 		OnClickListener, EvernoteLoginCallback, OnCheckedChangeListener {
 	private ViewGroup mBindEvernote;
 

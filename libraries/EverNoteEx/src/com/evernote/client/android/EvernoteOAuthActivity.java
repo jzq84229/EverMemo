@@ -34,7 +34,7 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v7.app.ActionBarActivity;
+import androidx.appcompat.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Menu;
@@ -65,7 +65,7 @@ import java.util.ArrayList;
  * 
  * class created by @tylersmithnet
  */
-public class EvernoteOAuthActivity extends ActionBarActivity {
+public class EvernoteOAuthActivity extends AppCompatActivity {
 	private static final String LOGTAG = "EvernoteOAuthActivity";
 
 	static final String EXTRA_EVERNOTE_SERVICE = "EVERNOTE_HOST";
