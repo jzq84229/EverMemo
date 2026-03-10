@@ -208,13 +208,10 @@ public class SettingActivity extends AppCompatActivity implements
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-		case android.R.id.home:
+		int itemId = item.getItemId();
+		if (itemId == android.R.id.home) {
 			finish();
-			break;
-
-		default:
-			break;
+			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}

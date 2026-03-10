@@ -275,14 +275,14 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-		case android.R.id.home:
+		int itemId = item.getItemId();
+		if (itemId == android.R.id.home) {
 			saveMemoAndLeave();
-			break;
-		case R.id.li:
+			return true;
+		} else if (itemId == R.id.li) {
 			clickList();
-			break;
-		case R.id.delete:
+			return true;
+		} else if (itemId == R.id.delete) {
 			AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
 			builder.setMessage(R.string.give_up_edit)
 					.setTitle(R.string.give_up_title)
@@ -298,12 +298,10 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 								}
 							}).setNegativeButton(R.string.give_up_cancel, null)
 					.create().show();
-			break;
-		case R.id.share_to:
+			return true;
+		} else if (itemId == R.id.share_to) {
 			share();
-			break;
-		default:
-			break;
+			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}

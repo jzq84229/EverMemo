@@ -44,8 +44,8 @@ android {
             assets.srcDirs = ['assets']
         }
 
-        instrumentTest.setRoot('tests')
-        debug.setRoot('build-types/debug')
-        release.setRoot('build-types/release')
+        androidTest.setRoot('tests')
+        // debug.setRoot('build-types/debug')
+        // release.setRoot('build-types/release')
     }
 }

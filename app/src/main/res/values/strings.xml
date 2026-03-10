@@ -23,7 +23,9 @@
     <string name="open_memo_off">No</string>
     <string name="can_not_open_market">Can not open the Market</string>
     <string name="hint_suggesion">Write down your suggestion</string>
+    <string name="connection_tip">Please leave your contact information</string>
     <string name="feedback">Feedback</string>
+    <string name="empty">_(:з」∠)_ Please fill in both contact and feedback content</string>
     <string name="send">Send</string>
     <string name="thanks">Thank you for your feedback</string>
     <string name="share_title">Share to you</string>

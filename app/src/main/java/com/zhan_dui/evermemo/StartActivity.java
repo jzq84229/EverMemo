@@ -243,19 +243,19 @@ public class StartActivity extends AppCompatActivity implements
 
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
-		switch (item.getItemId()) {
-		case R.id.settiing:
+		int itemId = item.getItemId();
+		if (itemId == R.id.settiing) {
 			Intent intent = new Intent(mContext, SettingActivity.class);
 			startActivity(intent);
-			break;
-		case R.id.sync:
+			return true;
+		} else if (itemId == R.id.sync) {
 			if (mEvernote.isLogin() == false) {
 				mEvernote.auth();
 			} else {
 				mEvernote.sync(true, true, new SyncHandler());
 			}
-			break;
-		case R.id.feedback:
+			return true;
+		} else if (itemId == R.id.feedback) {
 			Intent Email = new Intent(Intent.ACTION_SEND);
 			Email.setType("text/email");
 			Email.putExtra(Intent.EXTRA_EMAIL,
@@ -264,9 +264,7 @@ public class StartActivity extends AppCompatActivity implements
 			Email.putExtra(Intent.EXTRA_TEXT, getString(R.string.email_title));
 			startActivity(Intent.createChooser(Email,
 					getString(R.string.email_chooser)));
-			break;
-		default:
-			break;
+			return true;
 		}
 		return false;
 	}
@@ -303,8 +301,8 @@ public class StartActivity extends AppCompatActivity implements
 
 		@Override
 		public boolean onActionItemClicked(ActionMode arg0, MenuItem menuItem) {
-			switch (menuItem.getItemId()) {
-			case R.id.delete:
+			int itemId = menuItem.getItemId();
+			if (itemId == R.id.delete) {
 				if (mMemosAdapter.getSelectedCount() == 0) {
 					Toast.makeText(mContext, R.string.delete_select_nothing,
 							Toast.LENGTH_SHORT).show();
@@ -328,9 +326,7 @@ public class StartActivity extends AppCompatActivity implements
 							.setNegativeButton(R.string.delete_cancel, null)
 							.create().show();
 				}
-				break;
-			default:
-				break;
+				return true;
 			}
 			return false;
 		}

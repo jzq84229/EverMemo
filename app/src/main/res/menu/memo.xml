@@ -8,7 +8,7 @@
         evermemo:showAsAction="ifRoom"/>
     <item
         android:id="@+id/more"
-        android:icon="@drawable/abc_ic_menu_moreoverflow_normal_holo_light"
+        android:icon="@android:drawable/ic_menu_more"
         android:title="@string/menu_more"
         evermemo:showAsAction="ifRoom">
         <menu>

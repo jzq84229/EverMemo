@@ -449,9 +449,9 @@ ViewTreeObserver.OnGlobalLayoutListener, ViewTreeObserver.OnTouchModeChangeListe
 		initAbsListView();
 
 		setVerticalScrollBarEnabled(true);
-		TypedArray a = context.obtainStyledAttributes(R.styleable.View);
-		initializeScrollbars(a);
-		a.recycle();
+		// TypedArray a = context.obtainStyledAttributes(R.styleable.View);
+		// initializeScrollbars(a);
+		// a.recycle();
 	}
 
 	public PLA_AbsListView(Context context, AttributeSet attrs) {
