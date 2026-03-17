@@ -216,19 +216,15 @@ public class MemoListAdapter extends BaseAdapter implements View.OnClickListener
             // "Add memo" item clicked
             context.startActivity(new Intent(context, MemoActivity.class));
         } else {
-            switch (v.getId()) {
-                case R.id.hover:
-                    Memo memo = (Memo) v.getTag(R.string.memo_data);
-                    if (checkMode) {
-                        toggleCheckedId(memo.getId(), memo, v);
-                    } else {
-                        Intent intent = new Intent(context, MemoActivity.class);
-                        intent.putExtra("memo", memo);
-                        context.startActivity(intent);
-                    }
-                    break;
-                default:
-                    break;
+            if (v.getId() == R.id.hover) {
+                Memo memo = (Memo) v.getTag(R.string.memo_data);
+                if (checkMode) {
+                    toggleCheckedId(memo.getId(), memo, v);
+                } else {
+                    Intent intent = new Intent(context, MemoActivity.class);
+                    intent.putExtra("memo", memo);
+                    context.startActivity(intent);
+                }
             }
         }
     }

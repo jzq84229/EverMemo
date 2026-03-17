@@ -32,7 +32,6 @@ import com.evernote.edam.type.Notebook;
 import com.evernote.edam.type.User;
 import com.evernote.thrift.TException;
 import com.evernote.thrift.transport.TTransportException;
-import com.umeng.analytics.MobclickAgent;
 import com.zhan_dui.data.Memo;
 import com.zhan_dui.data.MemoDB;
 import com.zhan_dui.data.MemoProvider;
@@ -88,7 +87,6 @@ public class Evernote {
 
 	public void auth() {
 		mEvernoteSession.authenticate(mContext);
-		MobclickAgent.onEvent(mContext, "Bind_EverNote");
 	}
 
 	public void onAuthFinish(int resultCode) {
@@ -165,7 +163,6 @@ public class Evernote {
 				mEvernoteLoginCallback.onLogout(true);
 			}
 
-			MobclickAgent.onEvent(mContext, "UnBind_EverNote");
 		} catch (InvalidAuthenticationException e) {
 			if (mEvernoteLoginCallback != null) {
 				mEvernoteLoginCallback.onLogout(false);

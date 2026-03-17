@@ -2,6 +2,7 @@ package com.zhan_dui.data;
 
 import androidx.room.ColumnInfo;
 import androidx.room.Entity;
+import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
 /**
@@ -56,6 +57,7 @@ public class MemoEntity {
     public MemoEntity() {
     }
 
+    @Ignore
     public MemoEntity(int id, String content, long createdTime, long updatedTime, byte[] hash,
                      String guid, String enid, int syncStatus, String status, int cursorPosition,
                      int wallId, int order, long lastSyncTime, String attributes) {

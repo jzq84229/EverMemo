@@ -1,9 +1,5 @@
 package com.zhan_dui.evermemo;
 
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.List;
-
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
@@ -12,17 +8,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
-import android.database.MatrixCursor;
-import android.database.MergeCursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.preference.PreferenceManager;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -33,19 +23,24 @@ import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ActionMode;
+import androidx.lifecycle.ViewModelProvider;
+
 import com.evernote.client.android.EvernoteSession;
 import com.huewu.pla.lib.MultiColumnListView;
-import com.umeng.analytics.MobclickAgent;
-import com.umeng.update.UmengUpdateAgent;
 import com.zhan_dui.adapters.MemoListAdapter;
-import com.zhan_dui.data.Memo;
 import com.zhan_dui.adapters.MemosAdapter.ItemLongPressedLisener;
 import com.zhan_dui.adapters.MemosAdapter.onItemSelectLisener;
-import com.zhan_dui.data.MemoDB;
-import com.zhan_dui.data.MemoProvider;
+import com.zhan_dui.data.Memo;
 import com.zhan_dui.sync.Evernote;
 import com.zhan_dui.utils.Logger;
 import com.zhan_dui.utils.MarginAnimation;
+import com.zhan_dui.viewmodel.MemoViewModel;
+
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class StartActivity extends AppCompatActivity implements
 		OnClickListener, ItemLongPressedLisener,
@@ -71,7 +66,7 @@ public class StartActivity extends AppCompatActivity implements
 		getSupportActionBar().setLogo(R.drawable.ab_logo);
 		mContext = this;
 		mEvernote = new Evernote(mContext);
-		MobclickAgent.onError(this);
+//		MobclickAgent.onError(this);
 		setContentView(R.layout.activity_start);
 		mMemosGrid = (MultiColumnListView) findViewById(R.id.memos);
 		mBindEvernotePanel = (LinearLayout) findViewById(R.id.evernote_panel);
@@ -124,7 +119,7 @@ public class StartActivity extends AppCompatActivity implements
 		}
 
 		mEvernote.sync(true, true, null);
-		UmengUpdateAgent.update(this);
+//		UmengUpdateAgent.update(this);
 	}
 
 
@@ -150,7 +145,7 @@ public class StartActivity extends AppCompatActivity implements
 	@Override
 	protected void onResume() {
 		super.onResume();
-		MobclickAgent.onResume(this);
+//		MobclickAgent.onResume(this);
 
 		if (mMenu != null) {
 			MenuItem syncItem = mMenu.findItem(R.id.sync);
@@ -225,7 +220,7 @@ public class StartActivity extends AppCompatActivity implements
 			Logger.e("结束定时同步任务");
 			mSyncTimer.cancel();
 		}
-		MobclickAgent.onPause(this);
+//		MobclickAgent.onPause(this);
 	}
 
 	@Override

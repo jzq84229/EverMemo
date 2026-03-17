@@ -20,15 +20,6 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
-# umeng
--keep class com.umeng.** {*;}
--keep class org.repackage.** {*;}
--keep class com.uyumao.** { *; }
--keepclassmembers class * {
-   public <init> (org.json.JSONObject);
-}
-
--keepclassmembers enum * {
-    public static **[] values();
-    public static ** valueOf(java.lang.String);
-}
+# bugly
+-dontwarn com.tencent.bugly.**
+-keep public class com.tencent.bugly.**{*;}

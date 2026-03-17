@@ -48,13 +48,13 @@ public class RoomMemoRepository {
         return allMemos;
     }
 
-    /**
-     * Get a memo by ID
-     */
-    public Memo getMemoById(int id) {
-        MemoEntity entity = memoDao.getMemoById(id);
-        return entity != null ? entity.toMemo() : null;
-    }
+//    /**
+//     * Get a memo by ID
+//     */
+//    public Memo getMemoById(int id) {
+//        MemoEntity entity = memoDao.getMemoById(id);
+//        return entity != null ? entity.toMemo() : null;
+//    }
 
     /**
      * Insert a new memo

@@ -233,7 +233,7 @@ public class Memo implements Serializable {
 		mHash = hash;
 	}
 
-	private void setSyncStatus(int syncstatus) {
+	public void setSyncStatus(int syncstatus) {
 		mSyncStatus = syncstatus;
 	}
 
@@ -307,6 +307,26 @@ public class Memo implements Serializable {
 
 	public void setNeedSyncUp() {
 		setSyncStatus(NEED_SYNC_UP);
+	}
+
+	public void setStatus(String mStatus) {
+		this.mStatus = mStatus;
+	}
+
+	public void setWallId(int mWallId) {
+		this.mWallId = mWallId;
+	}
+
+	public void setOrder(int mOrder) {
+		this.mOrder = mOrder;
+	}
+
+	public void setLastSyncTime(long mLastSyncTime) {
+		this.mLastSyncTime = mLastSyncTime;
+	}
+
+	public void setAttributes(String mAttributes) {
+		this.mAttributes = mAttributes;
 	}
 
 	public boolean isNeedSyncUp() {

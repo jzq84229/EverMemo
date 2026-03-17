@@ -1,20 +1,12 @@
 package com.zhan_dui.evermemo;
 
-import java.util.Date;
-import java.util.Timer;
-import java.util.TimerTask;
-
 import android.app.AlertDialog;
-import android.content.ContentUris;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.lifecycle.ViewModelProvider;
 import android.text.Html;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -26,11 +18,16 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 
-import com.umeng.analytics.MobclickAgent;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.lifecycle.ViewModelProvider;
+
 import com.zhan_dui.data.Memo;
-import com.zhan_dui.data.MemoDB;
-import com.zhan_dui.data.MemoProvider;
 import com.zhan_dui.sync.Evernote;
+import com.zhan_dui.viewmodel.MemoViewModel;
+
+import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class MemoActivity extends AppCompatActivity implements OnClickListener,
 		OnKeyListener {
@@ -80,9 +77,9 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 			getWindow().setSoftInputMode(
 					WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
 			mContentEditText.requestFocus();
-			MobclickAgent.onEvent(mContext, "new_memo");
+//			MobclickAgent.onEvent(mContext, "new_memo");
 		} else {
-			MobclickAgent.onEvent(mContext, "edit_memo");
+//			MobclickAgent.onEvent(mContext, "edit_memo");
 		}
 
 		mContentEditText.setOnKeyListener(this);
@@ -105,16 +102,12 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 
 	@Override
 	public void onClick(View v) {
-		switch (v.getId()) {
-		case R.id.edit_container:
+		if (v.getId() == R.id.edit_container) {
 			InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 			inputMethodManager.toggleSoftInputFromWindow(
 					findViewById(R.id.edit_container)
 							.getApplicationWindowToken(),
 					InputMethodManager.SHOW_FORCED, 0);
-			break;
-		default:
-			break;
 		}
 	}
 
@@ -226,7 +219,7 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 		}
 		memo.setContent(Html.toHtml(mContentEditText.getText()));
 		memo.setCursorPosition(mContentEditText.getSelectionStart());
-		memo.setUpdatedTime(new Date().getTime());
+		memo.setUpdatedTime(System.currentTimeMillis());
 		if (mCreateNew) {
 			Uri resultUri = mMemoViewModel.createMemo(memo.getContent());
 			if (resultUri != null) {
@@ -251,13 +244,13 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 	protected void onPause() {
 		super.onPause();
 		mTimer.cancel();
-		MobclickAgent.onPause(this);
+//		MobclickAgent.onPause(this);
 	}
 
 	@Override
 	protected void onResume() {
 		super.onResume();
-		MobclickAgent.onResume(this);
+//		MobclickAgent.onResume(this);
 		mTimer = new Timer();
 		mTimer.schedule(new TimerTask() {
 			@Override
@@ -293,8 +286,7 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 								public void onClick(DialogInterface dialog,
 										int which) {
 									deleteAndLeave();
-									MobclickAgent.onEvent(mContext,
-											"delete_memo");
+//									MobclickAgent.onEvent(mContext, "delete_memo");
 								}
 							}).setNegativeButton(R.string.give_up_cancel, null)
 					.create().show();
