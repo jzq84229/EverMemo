@@ -1,3 +1,5 @@
+import java.util.Properties
+
 pluginManagement {
     repositories {
         maven {setUrl("https://maven.aliyun.com/repository/google")}
@@ -22,3 +24,8 @@ rootProject.name = "EverMemo"
 include(":app")
 include(":libraries:EverNoteEx")
 include(":libraries:ExGridView")
+
+val props = Properties()
+File("custom.properties").inputStream().apply{
+    props.load(this)
+}

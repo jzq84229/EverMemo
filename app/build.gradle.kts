@@ -1,10 +1,23 @@
 import java.text.SimpleDateFormat
 import java.util.Date
+import java.util.Properties
 
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
+
+
+
+val props = Properties()
+val inputStream = project.rootProject.file("custom.properties").inputStream()
+props.load(inputStream)
+
+val evernoteConsumerKey: String = props.getProperty("evernoteConsumerKey")
+val evernoteConsumerSecret: String = props.getProperty("evernoteConsumerSecret")
+val buglyId: String = props.getProperty("buglyId")
+val storePw: String = props.getProperty("storePw")
+val keyPw: String = props.getProperty("keyPw")
 
 fun getSvnRevision(): Int {
 //    val options = SVNWCUtil.createDefaultOptions(true)
@@ -40,9 +53,11 @@ android {
 //            abiFilters 'armeabi' //, 'x86', 'armeabi-v7a', 'x86_64', 'arm64-v8a'
             abiFilters.addAll(arrayOf("armeabi", "armeabi-v7a", "arm64-v8a"))
         }
-        buildConfigField("String", "EVERNOTE_CONSUMER_KEY", "\"milkliker\"")
-        buildConfigField("String", "EVERNOTE_CONSUMER_SECRET", "\"f479109c186d284b\"")
-        buildConfigField("String", "BUGLY_ID", "\"9cc9c91053\"")
+//        buildConfigField("String", "EVERNOTE_CONSUMER_KEY", "\"milkliker\"")
+//        buildConfigField("String", "EVERNOTE_CONSUMER_SECRET", "\"f479109c186d284b\"")
+        buildConfigField("String", "EVERNOTE_CONSUMER_KEY", "\"${evernoteConsumerKey}\"")
+        buildConfigField("String", "EVERNOTE_CONSUMER_SECRET", "\"${evernoteConsumerSecret}\"")
+        buildConfigField("String", "BUGLY_ID", "\"${buglyId}\"")
     }
 
     compileOptions {
@@ -56,17 +71,26 @@ android {
         abortOnError = false
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("../signature/keyStore.jks")
+            storePassword = "$storePw"
+            keyAlias = "EverMemo"
+            keyPassword = "s$keyPw"
+        }
+    }
+
     buildTypes {
         debug {
             isMinifyEnabled = false
             isShrinkResources = false
-//            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-//            signingConfig = signingConfigs.getByName("release")
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -78,28 +102,6 @@ android {
             }
         }
     }
-
-//    buildFeatures {
-//        compose = true
-//    }
-//    composeOptions {
-//        kotlinCompilerExtensionVersion = "1.4.3"
-//    }
-
-//    sourceSets {
-//        main{
-//            assets {
-//                srcDir="src/main/assets"
-//            }
-//        }
-//    }
-//    packagingOptions {
-//        exclude("META-INF/DEPENDENCIES")
-//        exclude("META-INF/NOTICE")
-//        exclude("META-INF/LICENSE")
-//        exclude("META-INF/LICENSE.txt")
-//        exclude("META-INF/NOTICE.txt")
-//    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"

@@ -5,6 +5,7 @@ import android.content.Context
 import android.os.Build
 import com.tencent.bugly.crashreport.CrashReport
 import com.tencent.bugly.crashreport.CrashReport.UserStrategy
+import com.tencent.shiply.integration.ShiplyParams
 
 
 class App : Application() {
@@ -45,7 +46,7 @@ class App : Application() {
 //
 //        val isDebugPackage: Boolean = BuildConfig.DEBUG // 宿主是否是debug包
 //
-//        val shiplyParams: ShiplyParams = Builder()
+//        val shiplyParams: ShiplyParams = ShiplyParams.Builder()
 //            .appId("53594dde3e")
 //            .appKey("eba6fb38-78c4-4939-8dcc-77abe779c41d")
 //            .userId("123321")
@@ -58,7 +59,7 @@ class App : Application() {
 //            .logImpl(CustomLogger()) // 自定义日志实现，建议对接到业务方自己的日志接口
 //            .build()
 //        // 初始化ShiplyPro SDK，统一接入时必须调用
-//        initialize(application, shiplyParams)
+//        initialize(applicationContext, shiplyParams)
 //        // 初始化配置开关SDK，使用配置开关时必须调用
 //        getRdeliveryInstance()
     }
