@@ -145,4 +145,20 @@ dependencies {
     implementation("com.tencent.shiply:shiplyintegration:1.0.0")
     // Shiply 配置开关 SDK,使用配置开关时必须依赖
     implementation("com.tencent.shiply:rdelivery:1.3.38-RC01")
+
+    // Test dependencies
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.mockito:mockito-core:5.11.0")
+    testImplementation("org.mockito.kotlin:mockito-kotlin:5.2.1")
+    testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    testImplementation("androidx.arch.core:core-testing:2.2.0")
+    testImplementation("androidx.test:core:1.5.0")
+    testImplementation("androidx.test.ext:truth:1.5.0")
+
+    // Android Instrumented Test dependencies
+    androidTestImplementation("androidx.test.ext:junit:1.1.5")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
+    androidTestImplementation("androidx.arch.core:core-testing:2.2.0")
+    androidTestImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+    androidTestImplementation("androidx.room:room-testing:2.6.0")
 }

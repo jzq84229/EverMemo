@@ -4,7 +4,8 @@
       "Read(//opt/homebrew/Cellar/openjdk@17/17.0.15/**)",
       "Bash(/opt/homebrew/opt/openjdk@17/bin/java -version)",
       "Bash(./gradlew compileDebugJavaWithJavac --info)",
-      "Bash(./gradlew compileDebugJavaWithJavac)"
+      "Bash(./gradlew compileDebugJavaWithJavac)",
+      "Bash(./gradlew test:*)"
     ]
   }
 }
