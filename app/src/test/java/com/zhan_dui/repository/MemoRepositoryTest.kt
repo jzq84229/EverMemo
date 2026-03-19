@@ -2,6 +2,7 @@ package com.zhan_dui.repository
 
 import android.content.ContentResolver
 import android.content.ContentValues
+import android.content.Context
 import android.database.Cursor
 import android.net.Uri
 import androidx.lifecycle.MutableLiveData
@@ -13,13 +14,16 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.*
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 
 @RunWith(MockitoJUnitRunner::class)
 class MemoRepositoryTest {
+
+    @Mock
+    private lateinit var mockContext: Context
 
     @Mock
     private lateinit var mockContentResolver: ContentResolver
@@ -32,7 +36,8 @@ class MemoRepositoryTest {
     @Test
     fun testGetAllMemos() {
         // Given
-        repository = MemoRepository { mockContentResolver }
+        whenever(mockContext.contentResolver).thenReturn(mockContentResolver)
+        repository = MemoRepository(mockContext)
 
         val testUri = Uri.parse("content://com.zhan_dui.evermemo.memoprovider/memo")
         whenever(mockContentResolver.query(
@@ -82,7 +87,8 @@ class MemoRepositoryTest {
     @Test
     fun testGetMemoById() {
         // Given
-        repository = MemoRepository { mockContentResolver }
+        whenever(mockContext.contentResolver).thenReturn(mockContentResolver)
+        repository = MemoRepository(mockContext)
 
         whenever(mockContentResolver.query(
             eq(MemoProvider.MEMO_URI),
@@ -111,7 +117,8 @@ class MemoRepositoryTest {
     @Test
     fun testGetMemoById_NotFound() {
         // Given
-        repository = MemoRepository { mockContentResolver }
+        whenever(mockContext.contentResolver).thenReturn(mockContentResolver)
+        repository = MemoRepository(mockContext)
 
         whenever(mockContentResolver.query(
             eq(MemoProvider.MEMO_URI),
@@ -134,7 +141,8 @@ class MemoRepositoryTest {
     @Test
     fun testInsertMemo() {
         // Given
-        repository = MemoRepository { mockContentResolver }
+        whenever(mockContext.contentResolver).thenReturn(mockContentResolver)
+        repository = MemoRepository(mockContext)
 
         val testMemo = createTestMemo(0, "New Memo")
         val expectedUri = Uri.parse("content://com.zhan_dui.evermemo.memoprovider/memo/1")
@@ -164,7 +172,8 @@ class MemoRepositoryTest {
     @Test
     fun testUpdateMemo() {
         // Given
-        repository = MemoRepository { mockContentResolver }
+        whenever(mockContext.contentResolver).thenReturn(mockContentResolver)
+        repository = MemoRepository(mockContext)
 
         val testMemo = createTestMemo(1, "Updated Memo")
 
@@ -191,7 +200,8 @@ class MemoRepositoryTest {
     @Test
     fun testDeleteMemo() {
         // Given
-        repository = MemoRepository { mockContentResolver }
+        whenever(mockContext.contentResolver).thenReturn(mockContentResolver)
+        repository = MemoRepository(mockContext)
 
         whenever(mockContentResolver.update(
             eq(MemoProvider.MEMO_URI),
@@ -219,7 +229,8 @@ class MemoRepositoryTest {
     @Test
     fun testRefreshMemos() {
         // Given
-        repository = MemoRepository { mockContentResolver }
+        whenever(mockContext.contentResolver).thenReturn(mockContentResolver)
+        repository = MemoRepository(mockContext)
 
         // Mock query for refresh
         whenever(mockContentResolver.query(

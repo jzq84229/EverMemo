@@ -9,7 +9,7 @@ import org.junit.runner.RunWith
 import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.*
-import kotlin.test.*
+import org.junit.Assert.*
 
 @RunWith(MockitoJUnitRunner::class)
 class EvernoteTest {
@@ -91,10 +91,10 @@ class EvernoteTest {
     @Test
     fun testSyncStatusConstants() {
         // Test Memo sync status constants are accessible
-        assertEquals(0, Memo.SYNC_SUCCESS)
+        assertEquals(0, Memo.NEED_NOTHING)
         assertEquals(1, Memo.NEED_SYNC_UP)
-        assertEquals(2, Memo.NEED_SYNC_DELETE)
-        assertEquals(3, Memo.DO_NOT_SYNC)
+        assertEquals(3, Memo.NEED_SYNC_DELETE)
+        // DO_NOT_SYNC doesn't exist in Memo, using NEED_SYNC_DELETE instead
     }
 
     @Test
@@ -140,10 +140,10 @@ class EvernoteTest {
     fun testMemoSyncStatusTransitions() {
         // Test that memo sync status values are distinct
         val statusValues = setOf(
-            Memo.SYNC_SUCCESS,
+            Memo.NEED_NOTHING,
             Memo.NEED_SYNC_UP,
             Memo.NEED_SYNC_DELETE,
-            Memo.DO_NOT_SYNC
+            Memo.SYNCING_UP
         )
 
         assertEquals(4, statusValues.size) // All values should be unique

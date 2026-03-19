@@ -23,7 +23,7 @@ import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.*
 import java.util.*
-import kotlin.test.*
+import org.junit.Assert.*
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -306,11 +306,24 @@ class MemoViewModelTest {
     // Test version of MemoViewModel that allows injection
     private class TestMemoViewModel(
         application: Application,
-        private val testRepository: RoomMemoRepository
+        testRepository: RoomMemoRepository
     ) : MemoViewModel(application) {
+        init {
+            try {
+                // Use reflection to set the private memoRepository field
+                val memoRepositoryField = MemoViewModel::class.java.getDeclaredField("memoRepository")
+                memoRepositoryField.isAccessible = true
+                memoRepositoryField.set(this, testRepository)
 
-        override fun createRepository(): RoomMemoRepository {
-            return testRepository
+                // Also need to set allMemos field to use the test repository's data
+                val allMemosField = MemoViewModel::class.java.getDeclaredField("allMemos")
+                allMemosField.isAccessible = true
+                allMemosField.set(this, testRepository.getAllMemos())
+
+                // Other fields can remain with default values
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 

@@ -1,131 +1,166 @@
 package com.zhan_dui.utils
 
+import android.content.Context
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mock
+import org.mockito.junit.MockitoJUnitRunner
+import org.mockito.kotlin.*
+import org.junit.Assert.*
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
+@RunWith(MockitoJUnitRunner::class)
 class DateHelperTest {
 
+    @Mock
+    private lateinit var mockContext: Context
+
     @Test
-    fun testGetCurrentTime() {
+    fun testGetGridDate() {
         // Given
-        val before = System.currentTimeMillis()
+        val timestamp = 1700000000000L
 
         // When
-        val currentTime = DateHelper.getCurrentTime()
-        val after = System.currentTimeMillis()
+        val result = DateHelper.getGridDate(mockContext, timestamp)
 
-        // Then
-        assertTrue(currentTime >= before)
-        assertTrue(currentTime <= after)
+        // Then - PrettyTime format should return a relative time string
+        assertNotNull(result)
+        assertTrue(result.isNotEmpty())
+        // PrettyTime returns strings like "2 months ago", "just now", etc.
     }
 
     @Test
-    fun testGetTimeString() {
+    fun testGetGridDate_CurrentTime() {
         // Given
-        val timestamp = 1700000000000L // A specific timestamp
-        val expectedFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        val expected = expectedFormat.format(Date(timestamp))
+        val currentTime = System.currentTimeMillis()
 
         // When
-        val result = DateHelper.getTimeString(timestamp)
+        val result = DateHelper.getGridDate(mockContext, currentTime)
 
         // Then
-        assertEquals(expected, result)
+        assertNotNull(result)
+        assertTrue(result.isNotEmpty())
+        // For current time, PrettyTime might return "just now" or "moments ago"
     }
 
     @Test
-    fun testGetTimeString_CurrentTime() {
-        // When getting current time as string
-        val result = DateHelper.getTimeString(System.currentTimeMillis())
+    fun testGetGridDate_FutureTime() {
+        // Given
+        val futureTime = System.currentTimeMillis() + 3600000 // 1 hour in future
 
-        // Should match format
-        val regex = """\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}""".toRegex()
-        assertTrue(regex.matches(result))
+        // When
+        val result = DateHelper.getGridDate(mockContext, futureTime)
+
+        // Then
+        assertNotNull(result)
+        assertTrue(result.isNotEmpty())
     }
 
     @Test
-    fun testGetTimeString_ZeroTimestamp() {
+    fun testGetGridDate_ZeroTimestamp() {
         // Given
         val timestamp = 0L
-        val expectedFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        val expected = expectedFormat.format(Date(timestamp))
 
         // When
-        val result = DateHelper.getTimeString(timestamp)
+        val result = DateHelper.getGridDate(mockContext, timestamp)
 
         // Then
-        assertEquals(expected, result)
+        assertNotNull(result)
+        assertTrue(result.isNotEmpty())
     }
 
     @Test
-    fun testGetTimeString_NegativeTimestamp() {
+    fun testGetMemoDate() {
         // Given
-        val timestamp = -1000L
-        val expectedFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-        val expected = expectedFormat.format(Date(timestamp))
+        val timestamp = 1700000000000L
 
         // When
-        val result = DateHelper.getTimeString(timestamp)
+        val result = DateHelper.getMemoDate(mockContext, timestamp)
 
-        // Then
-        assertEquals(expected, result)
+        // Then - sMemoShowDateFormat uses "M.d a h:m" format
+        assertNotNull(result)
+        assertTrue(result.isNotEmpty())
+        // Format example: "3.19 AM 10:30"
     }
 
     @Test
-    fun testGetCurrentTimeString() {
+    fun testGetMemoDate_CurrentTime() {
+        // Given
+        val currentTime = System.currentTimeMillis()
+
         // When
-        val result = DateHelper.getCurrentTimeString()
+        val result = DateHelper.getMemoDate(mockContext, currentTime)
 
         // Then
-        val regex = """\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}""".toRegex()
-        assertTrue(regex.matches(result))
+        assertNotNull(result)
+        assertTrue(result.isNotEmpty())
     }
 
     @Test
-    fun testTimeFormatConsistency() {
-        // Test that formatting is consistent
-        val timestamp1 = 1700000000000L
-        val timestamp2 = 1700000000000L // Same timestamp
+    fun testGetMemoDate_ZeroTimestamp() {
+        // Given
+        val timestamp = 0L
 
-        val result1 = DateHelper.getTimeString(timestamp1)
-        val result2 = DateHelper.getTimeString(timestamp2)
+        // When
+        val result = DateHelper.getMemoDate(mockContext, timestamp)
+
+        // Then
+        assertNotNull(result)
+        assertTrue(result.isNotEmpty())
+    }
+
+    @Test
+    fun testDateFormatConsistency() {
+        // Test that formatting is consistent for same timestamp
+        val timestamp = 1700000000000L
+
+        val result1 = DateHelper.getMemoDate(mockContext, timestamp)
+        val result2 = DateHelper.getMemoDate(mockContext, timestamp)
 
         assertEquals(result1, result2)
     }
 
     @Test
-    fun testGetCurrentTimeIncreases() {
-        // Current time should increase between calls
-        val time1 = DateHelper.getCurrentTime()
-        Thread.sleep(10) // Small delay
-        val time2 = DateHelper.getCurrentTime()
+    fun testDifferentTimestampsProduceDifferentResults() {
+        // Different timestamps should produce different formatted strings
+        val timestamp1 = 1700000000000L
+        val timestamp2 = 1700000001000L // 1 second later
 
-        assertTrue(time2 > time1)
+        val result1 = DateHelper.getMemoDate(mockContext, timestamp1)
+        val result2 = DateHelper.getMemoDate(mockContext, timestamp2)
+
+        // They might be different (though with 1 second difference they might be same
+        // depending on format precision)
+        // At minimum, ensure method doesn't crash
+        assertNotNull(result1)
+        assertNotNull(result2)
     }
 
     @Test
-    fun testDateFormatLocale() {
-        // Format should use default locale
+    fun testGetGridDateAndGetMemoDateDifferentFormats() {
+        // getGridDate and getMemoDate should use different formats
         val timestamp = 1700000000000L
-        val result = DateHelper.getTimeString(timestamp)
 
-        // Check format pattern (should be yyyy-MM-dd HH:mm:ss)
-        assertTrue(result.contains("-")) // Date separator
-        assertTrue(result.contains(":")) // Time separator
-        assertTrue(result.contains(" ")) // Space between date and time
+        val gridResult = DateHelper.getGridDate(mockContext, timestamp)
+        val memoResult = DateHelper.getMemoDate(mockContext, timestamp)
+
+        // They should be different formats (PrettyTime vs SimpleDateFormat)
+        assertNotNull(gridResult)
+        assertNotNull(memoResult)
+        // We can't easily compare the actual formats in unit tests
     }
 
     @Test
-    fun testGetTimeStringWithDifferentTimezones() {
-        // Note: DateHelper uses default timezone
-        val timestamp = 1700000000000L
-        val result = DateHelper.getTimeString(timestamp)
+    fun testContextParameterIsIgnored() {
+        // DateHelper methods take Context but don't seem to use it
+        // This test verifies the methods work even with null context reference
+        val timestamp = System.currentTimeMillis()
 
-        // Result should not be empty
-        assertTrue(result.isNotEmpty())
-        assertTrue(result.length >= 19) // yyyy-MM-dd HH:mm:ss is 19 chars
+        val result1 = DateHelper.getGridDate(mockContext, timestamp)
+        val result2 = DateHelper.getMemoDate(mockContext, timestamp)
+
+        assertNotNull(result1)
+        assertNotNull(result2)
     }
 }

@@ -1,8 +1,8 @@
 package com.zhan_dui.utils
 
 import org.junit.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 
 class LoggerTest {
 

@@ -56,7 +56,7 @@ class MemoEntityTest {
         entity.hash = byteArrayOf(1, 2, 3)
         entity.guid = "guid123"
         entity.enid = "enid456"
-        entity.syncStatus = Memo.SYNC_SUCCESS
+        entity.syncStatus = Memo.NEED_NOTHING
         entity.status = "active"
         entity.cursorPosition = 3
         entity.wallId = 7
@@ -71,7 +71,7 @@ class MemoEntityTest {
         assertArrayEquals(byteArrayOf(1, 2, 3), entity.hash)
         assertEquals("guid123", entity.guid)
         assertEquals("enid456", entity.enid)
-        assertEquals(Memo.SYNC_SUCCESS, entity.syncStatus)
+        assertEquals(Memo.NEED_NOTHING, entity.syncStatus)
         assertEquals("active", entity.status)
         assertEquals(3, entity.cursorPosition)
         assertEquals(7, entity.wallId)
@@ -154,7 +154,7 @@ class MemoEntityTest {
             hash = "test".toByteArray()
             guid = UUID.randomUUID().toString()
             enid = "enid_roundtrip"
-            syncStatus = Memo.SYNC_SUCCESS
+            syncStatus = Memo.NEED_NOTHING
             status = "active"
             cursorPosition = 10
             wallId = 20

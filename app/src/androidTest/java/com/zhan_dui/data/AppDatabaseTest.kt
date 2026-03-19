@@ -120,7 +120,7 @@ class AppDatabaseTest {
     @Test
     fun testGetMemosNeedingSync() = runBlocking {
         // Create memos with different sync statuses
-        val memo1 = createTestMemoEntity(id = 0, syncStatus = Memo.SYNC_SUCCESS)
+        val memo1 = createTestMemoEntity(id = 0, syncStatus = Memo.NEED_NOTHING)
         val memo2 = createTestMemoEntity(id = 0, syncStatus = Memo.NEED_SYNC_UP)
         val memo3 = createTestMemoEntity(id = 0, syncStatus = Memo.NEED_SYNC_DELETE)
 
@@ -131,7 +131,7 @@ class AppDatabaseTest {
         val memosNeedingSync = memoDao.getMemosNeedingSync()
 
         assertEquals(2, memosNeedingSync.size) // Should have 2 memos needing sync
-        assertTrue(memosNeedingSync.all { it.syncStatus != Memo.SYNC_SUCCESS })
+        assertTrue(memosNeedingSync.all { it.syncStatus != Memo.NEED_NOTHING })
     }
 
     @Test

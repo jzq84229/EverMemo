@@ -5,7 +5,11 @@
       "Bash(/opt/homebrew/opt/openjdk@17/bin/java -version)",
       "Bash(./gradlew compileDebugJavaWithJavac --info)",
       "Bash(./gradlew compileDebugJavaWithJavac)",
-      "Bash(./gradlew test:*)"
+      "Bash(./gradlew test:*)",
+      "Bash(./gradlew :app:testDebugUnitTest)",
+      "Bash(./gradlew :app:testDebugUnitTest --stacktrace)",
+      "Bash(./gradlew :app:compileDebugUnitTestKotlin)",
+      "Bash(./gradlew :app:testDebugUnitTest --info)"
     ]
   }
 }

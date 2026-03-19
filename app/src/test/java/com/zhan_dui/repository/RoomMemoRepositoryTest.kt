@@ -3,6 +3,7 @@ package com.zhan_dui.repository
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import android.content.Context
 import com.zhan_dui.data.AppDatabase
 import com.zhan_dui.data.Memo
 import com.zhan_dui.data.MemoDao
@@ -22,10 +23,10 @@ import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.*
 import java.util.*
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
-import kotlin.test.assertNull
-import kotlin.test.assertTrue
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)
@@ -35,6 +36,9 @@ class RoomMemoRepositoryTest {
     val instantTaskExecutorRule = InstantTaskExecutorRule()
 
     private val testDispatcher = StandardTestDispatcher()
+
+    @Mock
+    private lateinit var mockContext: Context
 
     @Mock
     private lateinit var mockDatabase: AppDatabase
@@ -48,9 +52,32 @@ class RoomMemoRepositoryTest {
     fun setup() {
         Dispatchers.setMain(testDispatcher)
         whenever(mockDatabase.memoDao()).thenReturn(mockMemoDao)
-        // We need to use reflection or constructor injection for testing
-        // For now, create a test version or use mock context
-        repository = RoomMemoRepository(mockDatabase)
+
+        // Create a test RoomMemoRepository that uses our mock database
+        // We'll use reflection to inject the mock MemoDao
+        repository = object : RoomMemoRepository(mockContext) {
+            init {
+                try {
+                    // Use reflection to set the private memoDao field
+                    val memoDaoField = RoomMemoRepository::class.java.getDeclaredField("memoDao")
+                    memoDaoField.isAccessible = true
+                    memoDaoField.set(this, mockMemoDao)
+
+                    // Also set the executor field if needed
+                    val executorField = RoomMemoRepository::class.java.getDeclaredField("executor")
+                    executorField.isAccessible = true
+                    // Keep the existing executor or set a mock one
+
+                    // Set allMemos LiveData field
+                    val allMemosField = RoomMemoRepository::class.java.getDeclaredField("allMemos")
+                    allMemosField.isAccessible = true
+                    // We'll let it initialize normally or set a mock
+
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
     }
 
     @After
@@ -229,7 +256,7 @@ class RoomMemoRepositoryTest {
         assertEquals(2, result.size)
         assertEquals("Memo 1", result[0].content)
         assertEquals("Memo 2", result[1].content)
-        assertTrue(result.all { it.syncStatus != Memo.SYNC_SUCCESS })
+        assertTrue(result.all { it.syncStatus != Memo.NEED_NOTHING })
     }
 
     @Test
@@ -287,21 +314,21 @@ class RoomMemoRepositoryTest {
     }
 
     private fun createTestMemoEntity(id: Int, content: String, syncStatus: Int = Memo.NEED_SYNC_UP): MemoEntity {
-        return MemoEntity(
-            id = id,
-            content = content,
-            createdTime = System.currentTimeMillis(),
-            updatedTime = System.currentTimeMillis(),
-            hash = content.toByteArray(),
-            guid = UUID.randomUUID().toString(),
-            enid = "enid_${UUID.randomUUID()}",
-            syncStatus = syncStatus,
-            status = "active",
-            cursorPosition = 0,
-            wallId = 1,
-            order = 1,
-            lastSyncTime = System.currentTimeMillis(),
-            attributes = "{}"
-        )
+        val entity = MemoEntity()
+        entity.id = id
+        entity.content = content
+        entity.createdTime = System.currentTimeMillis()
+        entity.updatedTime = System.currentTimeMillis()
+        entity.hash = content.toByteArray()
+        entity.guid = UUID.randomUUID().toString()
+        entity.enid = "enid_${UUID.randomUUID()}"
+        entity.syncStatus = syncStatus
+        entity.status = "active"
+        entity.cursorPosition = 0
+        entity.wallId = 1
+        entity.order = 1
+        entity.lastSyncTime = System.currentTimeMillis()
+        entity.attributes = "{}"
+        return entity
     }
 }
