@@ -1,3 +1,4 @@
+import org.apache.commons.io.output.ByteArrayOutputStream
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Properties
@@ -18,21 +19,29 @@ val evernoteConsumerSecret: String = props.getProperty("evernoteConsumerSecret")
 val buglyId: String = props.getProperty("buglyId")
 val storePw: String = props.getProperty("storePw")
 val keyPw: String = props.getProperty("keyPw")
+val evernoteToken: String = props.getProperty("evernoteToken")
 
-fun getSvnRevision(): Int {
-//    val options = SVNWCUtil.createDefaultOptions(true)
-//    val clientManager = SVNClientManager.newInstance(options)
-//    val statusClient = clientManager.statusClient
-//    val status = statusClient.doStatus(project.rootDir, false)
-//    val revision = status.committedRevision.number.toInt()
-//    println("project and revision: ${project.rootProject.name}, $revision")
-//    return revision
-    return 1
+val gitBuildNumber: String by lazy {
+    val stdout = ByteArrayOutputStream()
+    rootProject.exec {
+        commandLine("git", "rev-list", "--count", "HEAD")
+        standardOutput = stdout
+    }
+    stdout.toString().trim()
+}
+val gitHash: String by lazy {
+    val stdout = ByteArrayOutputStream()
+    rootProject.exec {
+        commandLine("git", "rev-parse", "--short", "HEAD")
+        standardOutput = stdout
+    }
+    stdout.toString().trim()
 }
 
 android {
     namespace = "com.zhan_dui.evermemo"
     compileSdk = 34
+    useLibrary("org.apache.http.legacy")
 
     buildFeatures {
         buildConfig = true
@@ -41,8 +50,8 @@ android {
         applicationId = "com.zhan_dui.evermemo"
         minSdk = 24
         targetSdk = 34
-        versionCode = 7
-        versionName = "1.1.2"
+        versionCode = gitBuildNumber.toInt()
+        versionName = "1.1.2.$gitHash"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         vectorDrawables {
@@ -58,14 +67,15 @@ android {
         buildConfigField("String", "EVERNOTE_CONSUMER_KEY", "\"${evernoteConsumerKey}\"")
         buildConfigField("String", "EVERNOTE_CONSUMER_SECRET", "\"${evernoteConsumerSecret}\"")
         buildConfigField("String", "BUGLY_ID", "\"${buglyId}\"")
+        buildConfigField("String", "EVERNOTE_DEV_TOKEN", "\"${evernoteToken}\"")
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = "1.8"
     }
     lint {
         abortOnError = false
@@ -74,9 +84,9 @@ android {
     signingConfigs {
         create("release") {
             storeFile = file("../signature/keyStore.jks")
-            storePassword = "$storePw"
-            keyAlias = "EverMemo"
-            keyPassword = "s$keyPw"
+            storePassword = storePw
+            keyAlias = "evermemo"
+            keyPassword = keyPw
         }
     }
 
@@ -88,8 +98,8 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
+            isShrinkResources = false
             signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }

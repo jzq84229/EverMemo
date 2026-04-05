@@ -3,6 +3,7 @@ package com.zhan_dui.evermemo
 import android.app.Application
 import android.content.Context
 import android.os.Build
+import com.evernote.client.android.EvernoteSession
 import com.tencent.bugly.crashreport.CrashReport
 import com.tencent.bugly.crashreport.CrashReport.UserStrategy
 import com.tencent.shiply.integration.ShiplyParams

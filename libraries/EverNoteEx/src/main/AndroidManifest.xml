@@ -3,5 +3,9 @@
     package="com.evernote.androidsdk">
 
     <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="16"/>
-    <application />
+    <application>
+        <uses-library
+            android:name="org.apache.http.legacy"
+            android:required="false" />
+    </application>
 </manifest>

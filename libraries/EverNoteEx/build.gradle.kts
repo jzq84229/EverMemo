@@ -28,18 +28,20 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
     }
     kotlinOptions {
-        jvmTarget = "17"
+        jvmTarget = "1.8"
     }
 }
 
 dependencies {
     api(fileTree("libs") {
-        include("*.jar")
+        include("evernote-api-1.25.jar")
+        include("scribe-1.3.7.jar")
     })
+//    api(files("./libs/evernote-sdk-2.0.0-RC4.aar"))
     api("androidx.appcompat:appcompat:1.6.1")
     api("androidx.core:core:1.12.0")
 //    api("org.apache.http:httpcore:4.2")

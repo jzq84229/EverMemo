@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     android:versionCode="7"
-    android:versionName="1.1.2" >
-
-    <uses-sdk
-        android:minSdkVersion="21"
-        android:targetSdkVersion="34" />
+    android:versionName="1.1.2">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -15,12 +11,17 @@
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
     <application
+        android:name=".App"
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:logo="@drawable/ab_logo"
-        android:name=".App"
-        android:theme="@style/EverMemo_LightMode" >
+        android:theme="@style/EverMemo_LightMode">
+
+        <uses-library
+            android:name="org.apache.http.legacy"
+            android:required="false" />
+
         <!--<service
             android:name="com.umeng.common.net.DownloadingService"
             android:process=":DownloadingService" >
@@ -38,10 +39,12 @@
             android:name="com.zhan_dui.data.MemoProvider"
             android:authorities="com.zhan_dui.data.MemoContentProvider"
             android:exported="false"
-            android:multiprocess="true" >
-        </provider>
+            android:multiprocess="true"/>
 
-        <activity android:name="com.zhan_dui.evermemo.StartActivity" android:exported="true">
+        <activity
+            android:name="com.zhan_dui.evermemo.StartActivity"
+            android:exported="true"
+            android:launchMode="singleTask">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -50,15 +53,12 @@
         </activity>
         <activity
             android:name="com.zhan_dui.evermemo.MemoActivity"
-            android:windowSoftInputMode="stateHidden|adjustResize" >
-        </activity>
-        <activity android:name="com.zhan_dui.evermemo.SettingActivity" >
-        </activity>
+            android:windowSoftInputMode="stateHidden|adjustResize"/>
+        <activity android:name="com.zhan_dui.evermemo.SettingActivity"/>
         <activity
             android:name="com.evernote.client.android.EvernoteOAuthActivity"
             android:configChanges="orientation|keyboardHidden" />
-        <activity android:name="com.zhan_dui.evermemo.FeedbackActivity" >
-        </activity>
+        <!--<activity android:name="com.zhan_dui.evermemo.FeedbackActivity"/>-->
     </application>
 
 </manifest>

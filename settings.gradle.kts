@@ -26,6 +26,6 @@ include(":libraries:EverNoteEx")
 include(":libraries:ExGridView")
 
 val props = Properties()
-File("custom.properties").inputStream().apply{
+file("custom.properties").inputStream().apply{
     props.load(this)
 }
