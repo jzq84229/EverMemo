@@ -1,23 +1,11 @@
 package com.zhan_dui.sync;
 
-import com.zhan_dui.evermemo.BuildConfig;
-import java.util.List;
-import java.util.Map;
-
 import android.app.Activity;
-import android.content.ContentResolver;
-import android.content.ContentUris;
-import android.content.ContentValues;
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 
 import com.evernote.client.android.EvernoteSession;
-import com.evernote.client.android.InvalidAuthenticationException;
-import com.evernote.client.android.OnClientCallback;
+import com.evernote.client.android.asyncclient.EvernoteCallback;
 import com.evernote.edam.error.EDAMErrorCode;
 import com.evernote.edam.error.EDAMNotFoundException;
 import com.evernote.edam.error.EDAMSystemException;
@@ -32,15 +20,19 @@ import com.evernote.edam.type.Notebook;
 import com.evernote.edam.type.User;
 import com.evernote.thrift.TException;
 import com.evernote.thrift.transport.TTransportException;
-import com.zhan_dui.data.Memo;
-import com.zhan_dui.data.MemoDB;
-import com.zhan_dui.data.MemoProvider;
+import com.zhan_dui.data.MemoEntity;
+import com.zhan_dui.evermemo.BuildConfig;
+import com.zhan_dui.repository.MemoRepository;
 import com.zhan_dui.utils.Logger;
+import com.zhan_dui.utils.SPManager;
+
+import java.util.List;
+import java.util.Map;
 
 public class Evernote {
 
 	public String LogTag = "EverNote";
-	public Context mContext;
+	public Activity mContext;
 	private static final String CONSUMER_KEY = BuildConfig.EVERNOTE_CONSUMER_KEY;
 	private static final String CONSUMER_SECRET = BuildConfig.EVERNOTE_CONSUMER_SECRET;
 	private static final String NOTEBOOK_NAME = "EverMemo";
@@ -54,21 +46,36 @@ public class Evernote {
 	public static boolean SyncingDown = false;
 
 	private static final EvernoteSession.EvernoteService EVERNOTE_SERVICE = EvernoteSession.EvernoteService.PRODUCTION;
+//	private static final EvernoteSession.EvernoteService EVERNOTE_SERVICE = EvernoteSession.EvernoteService.SANDBOX;
+    /*
+     * Set this to true if you want to allow linked notebooks for accounts that
+     * can only access a single notebook.
+     */
+    private static final boolean SUPPORT_APP_LINKED_NOTEBOOKS = true;
 	private EvernoteSession mEvernoteSession;
-	private SharedPreferences mSharedPreferences;
-	private ContentResolver mContentResolver;
+//	private SharedPreferences mSharedPreferences;
+//	private ContentResolver mContentResolver;
+	private MemoRepository memoRepository;
 	private EvernoteLoginCallback mEvernoteLoginCallback;
 
-	public Evernote(Context context) {
+	public Evernote(Activity context) {
 		mContext = context;
-		mContentResolver = context.getContentResolver();
-		mSharedPreferences = PreferenceManager
-				.getDefaultSharedPreferences(context);
-		mEvernoteSession = EvernoteSession.getInstance(mContext, CONSUMER_KEY,
-				CONSUMER_SECRET, EVERNOTE_SERVICE);
+//		mContentResolver = context.getContentResolver();
+        memoRepository = new MemoRepository(context);
+//		mSharedPreferences = PreferenceManager
+//				.getDefaultSharedPreferences(context);
+//		mEvernoteSession = EvernoteSession.getInstance(mContext, CONSUMER_KEY,
+//				CONSUMER_SECRET, EVERNOTE_SERVICE);
+        mEvernoteSession = new EvernoteSession.Builder(context)
+                .setEvernoteService(EVERNOTE_SERVICE)
+                .setSupportAppLinkedNotebooks(SUPPORT_APP_LINKED_NOTEBOOKS)
+                .setForceAuthenticationInThirdPartyApp(true)
+//                .setLocale(Locale.SIMPLIFIED_CHINESE)
+                .build(CONSUMER_KEY, CONSUMER_SECRET)
+                .asSingleton();
 	}
 
-	public Evernote(Context context, EvernoteLoginCallback l) {
+	public Evernote(Activity context, EvernoteLoginCallback l) {
 		this(context);
 		mEvernoteLoginCallback = l;
 	}
@@ -91,10 +98,12 @@ public class Evernote {
 
 	public void onAuthFinish(int resultCode) {
 		if (resultCode == Activity.RESULT_OK) {
-			mSharedPreferences.edit()
-					.putString(EVERNOTE_TOKEN, mEvernoteSession.getAuthToken())
-					.putLong(EVERNOTE_TOKEN_TIME, System.currentTimeMillis())
-					.commit();
+//			mSharedPreferences.edit()
+//					.putString(EVERNOTE_TOKEN, mEvernoteSession.getAuthToken())
+//					.putLong(EVERNOTE_TOKEN_TIME, System.currentTimeMillis())
+//					.commit();
+            SPManager.getInstance().putString(EVERNOTE_TOKEN, mEvernoteSession.getAuthToken());
+            SPManager.getInstance().putLong(EVERNOTE_TOKEN_TIME, System.currentTimeMillis());
 			getUserInfo();
 			if (mEvernoteLoginCallback != null) {
 				mEvernoteLoginCallback.onLoginResult(true);
@@ -108,34 +117,34 @@ public class Evernote {
 	}
 
 	public String getUsername() {
-		return mSharedPreferences.getString(EVERNOTE_USER_NAME, null);
+//		return mSharedPreferences.getString(EVERNOTE_USER_NAME, null);
+        return SPManager.getInstance().getString(EVERNOTE_USER_NAME, null);
 	}
 
 	public void getUserInfo() {
 		if (mEvernoteSession.isLoggedIn()) {
 			try {
-				mEvernoteSession.getClientFactory().createUserStoreClient()
-						.getUser(new OnClientCallback<User>() {
+				mEvernoteSession.getEvernoteClientFactory().getUserStoreClient()
+						.getUserAsync(new EvernoteCallback<User>() {
 
 							@Override
 							public void onSuccess(User user) {
-								mSharedPreferences
-										.edit()
-										.putString(EVERNOTE_USER_NAME,
-												user.getUsername())
-										.putString(EVERNOTE_USER_EMAIL,
-												user.getEmail()).commit();
+//								mSharedPreferences
+//										.edit()
+//										.putString(EVERNOTE_USER_NAME, user.getUsername())
+//										.putString(EVERNOTE_USER_EMAIL, user.getEmail())
+//                                        .commit();
+                                SPManager.getInstance().putString(EVERNOTE_USER_NAME, user.getUsername());
+                                SPManager.getInstance().putString(EVERNOTE_USER_EMAIL, user.getEmail());
 								if (mEvernoteLoginCallback != null) {
-									mEvernoteLoginCallback.onUserinfo(true,
-											user);
+									mEvernoteLoginCallback.onUserinfo(true, user);
 								}
 							}
 
 							@Override
 							public void onException(Exception exception) {
 								if (mEvernoteLoginCallback != null) {
-									mEvernoteLoginCallback.onUserinfo(false,
-											null);
+									mEvernoteLoginCallback.onUserinfo(false, null);
 								}
 							}
 						});
@@ -144,44 +153,49 @@ public class Evernote {
 				if (mEvernoteLoginCallback != null) {
 					mEvernoteLoginCallback.onUserinfo(false, null);
 				}
-			} catch (TTransportException e) {
-				e.printStackTrace();
-				if (mEvernoteLoginCallback != null) {
-					mEvernoteLoginCallback.onUserinfo(false, null);
-				}
+//			} catch (TTransportException e) {
+//				e.printStackTrace();
+//				if (mEvernoteLoginCallback != null) {
+//					mEvernoteLoginCallback.onUserinfo(false, null);
+//				}
 			}
 		}
 	}
 
 	public void Logout() {
-		try {
-			mEvernoteSession.logOut(mContext);
-			mSharedPreferences.edit().remove(EVERNOTE_USER_NAME)
-					.remove(EVERNOTE_NOTEBOOK_GUID).remove(EVERNOTE_USER_EMAIL)
-					.commit();
+//		try {
+			mEvernoteSession.logOut();
+//			mSharedPreferences.edit().remove(EVERNOTE_USER_NAME)
+//					.remove(EVERNOTE_NOTEBOOK_GUID).remove(EVERNOTE_USER_EMAIL)
+//					.commit();
+        SPManager.getInstance().remove(EVERNOTE_USER_NAME);
+        SPManager.getInstance().remove(EVERNOTE_NOTEBOOK_GUID);
+        SPManager.getInstance().remove(EVERNOTE_USER_EMAIL);
 			if (mEvernoteLoginCallback != null) {
 				mEvernoteLoginCallback.onLogout(true);
 			}
 
-		} catch (InvalidAuthenticationException e) {
-			if (mEvernoteLoginCallback != null) {
-				mEvernoteLoginCallback.onLogout(false);
-			}
-		}
+//		} catch (InvalidAuthenticationException e) {
+//			if (mEvernoteLoginCallback != null) {
+//				mEvernoteLoginCallback.onLogout(false);
+//			}
+//		}
 	}
 
 	public boolean isNotebookExsist(String guid, String name) throws Exception {
 		boolean result = false;
 		try {
-			Notebook notebook = mEvernoteSession.getClientFactory()
-					.createNoteStore()
-					.getNotebook(mEvernoteSession.getAuthToken(), guid);
+//			Notebook notebook = mEvernoteSession.getClientFactory()
+//					.createNoteStore()
+//					.getNotebook(mEvernoteSession.getAuthToken(), guid);
+            Notebook notebook = mEvernoteSession.getEvernoteClientFactory().getNoteStoreClient().getNotebook(guid);
 			if (notebook.getName().equals(name)) {
 				result = true;
 				Logger.e(LogTag, guid + "笔记本存在");
-				mSharedPreferences.edit()
-						.putString(EVERNOTE_NOTEBOOK_GUID, notebook.getGuid())
-						.commit();
+//				mSharedPreferences.edit()
+//						.putString(EVERNOTE_NOTEBOOK_GUID, notebook.getGuid())
+//						.commit();
+                SPManager.getInstance().putString(EVERNOTE_NOTEBOOK_GUID, notebook.getGuid());
 			}
 		} catch (EDAMNotFoundException e) {
 			e.printStackTrace();
@@ -206,15 +220,16 @@ public class Evernote {
 		notebook.setName(bookname);
 		boolean result = false;
 		try {
-			Notebook resultNotebook = mEvernoteSession.getClientFactory()
-					.createNoteStore()
-					.createNotebook(mEvernoteSession.getAuthToken(), notebook);
+			Notebook resultNotebook = mEvernoteSession.getEvernoteClientFactory()
+                    .getNoteStoreClient()
+					.createNotebook(notebook);
 			result = true;
 			Logger.e(LogTag, "Notebook" + bookname + "不存在，创建成功");
-			mSharedPreferences
-					.edit()
-					.putString(EVERNOTE_NOTEBOOK_GUID, resultNotebook.getGuid())
-					.commit();
+//			mSharedPreferences
+//					.edit()
+//					.putString(EVERNOTE_NOTEBOOK_GUID, resultNotebook.getGuid())
+//					.commit();
+            SPManager.getInstance().putString(EVERNOTE_NOTEBOOK_GUID, resultNotebook.getGuid());
 		} catch (EDAMUserException e) {
 			if (e.getErrorCode() == EDAMErrorCode.DATA_CONFLICT) {
 				result = true;
@@ -227,23 +242,27 @@ public class Evernote {
 		return result;
 	}
 
-	private Note createNote(Memo memo) throws Exception {
+	private Note createNote(MemoEntity memo) throws Exception {
 		try {
 			Note note = memo.toNote();
-			note.setNotebookGuid(mSharedPreferences.getString(
-					EVERNOTE_NOTEBOOK_GUID, null));
-			Note responseNote = mEvernoteSession.getClientFactory()
-					.createNoteStore()
-					.createNote(mEvernoteSession.getAuthToken(), note);
+			note.setNotebookGuid(SPManager.getInstance().getString(EVERNOTE_NOTEBOOK_GUID, null));
+			Note responseNote = mEvernoteSession.getEvernoteClientFactory()
+                    .getNoteStoreClient()
+					.createNote(note);
 			Logger.e(LogTag, "Note创建成功");
-			ContentValues values = new ContentValues();
-			values.put(MemoDB.ENID, responseNote.getGuid());
-			values.put(MemoDB.SYNCSTATUS, Memo.NEED_NOTHING);
-			values.put(MemoDB.UPDATEDTIME, responseNote.getUpdated());
-			values.put(MemoDB.HASH, responseNote.getContentHash());
-			mContentResolver.update(
-					ContentUris.withAppendedId(MemoProvider.MEMO_URI,
-							memo.getId()), values, null, null);
+            memo.enid = responseNote.getGuid();
+            memo.syncStatus = MemoEntity.NEED_NOTHING;
+            memo.updatedTime = responseNote.getUpdated();
+            memo.hash = responseNote.getContentHash();
+            memoRepository.updateMemo(memo);
+//			ContentValues values = new ContentValues();
+//			values.put(MemoDB.ENID, responseNote.getGuid());
+//			values.put(MemoDB.SYNCSTATUS, Memo.NEED_NOTHING);
+//			values.put(MemoDB.UPDATEDTIME, responseNote.getUpdated());
+//			values.put(MemoDB.HASH, responseNote.getContentHash());
+//			mContentResolver.update(
+//					ContentUris.withAppendedId(MemoProvider.MEMO_URI,
+//							memo.getId()), values, null, null);
 			return responseNote;
 		} catch (EDAMUserException e) {
 			throw new Exception("Note格式不合理");
@@ -260,11 +279,9 @@ public class Evernote {
 			return true;
 		} else {
 			try {
-				mEvernoteSession
-						.getClientFactory()
-						.createNoteStore()
-						.deleteNote(mEvernoteSession.getAuthToken(),
-								note.getGuid());
+				mEvernoteSession.getEvernoteClientFactory()
+                        .getNoteStoreClient()
+						.deleteNote(note.getGuid());
 				Logger.e(LogTag, "Note删除成功");
 				return true;
 			} catch (EDAMUserException e) {
@@ -280,20 +297,21 @@ public class Evernote {
 		}
 	}
 
-	private Note updateNote(Memo memo) throws Exception {
+	private Note updateNote(MemoEntity memo) throws Exception {
 		try {
-			Note responseNote = mEvernoteSession
-					.getClientFactory()
-					.createNoteStore()
-					.updateNote(mEvernoteSession.getAuthToken(),
-							memo.toUpdateNote());
-			ContentValues values = new ContentValues();
-			values.put(MemoDB.SYNCSTATUS, Memo.NEED_NOTHING);
-			values.put(MemoDB.UPDATEDTIME, responseNote.getUpdated());
-			values.put(MemoDB.HASH, responseNote.getContentHash());
-			mContentResolver.update(
-					ContentUris.withAppendedId(MemoProvider.MEMO_URI,
-							memo.getId()), values, null, null);
+			Note responseNote = mEvernoteSession.getEvernoteClientFactory()
+                    .getNoteStoreClient()
+					.updateNote(memo.toUpdateNote());
+//			ContentValues values = new ContentValues();
+//			values.put(MemoDB.SYNCSTATUS, Memo.NEED_NOTHING);
+//			values.put(MemoDB.UPDATEDTIME, responseNote.getUpdated());
+//			values.put(MemoDB.HASH, responseNote.getContentHash());
+//			mContentResolver.update(
+//					ContentUris.withAppendedId(MemoProvider.MEMO_URI,
+//							memo.getId()), values, null, null);
+            memo.syncStatus = MemoEntity.NEED_NOTHING;
+            memo.updatedTime = responseNote.getUpdated();
+            memo.hash = responseNote.getContentHash();
 			Logger.e(LogTag, "Note更新成功");
 			return responseNote;
 		} catch (EDAMUserException e) {
@@ -310,23 +328,23 @@ public class Evernote {
 
 	private void makeSureNotebookExsits(String NotebookName) throws Exception {
 		try {
-			if (mSharedPreferences.contains(EVERNOTE_NOTEBOOK_GUID)) {
-				if (!isNotebookExsist(mSharedPreferences.getString(
-						EVERNOTE_NOTEBOOK_GUID, ""), NOTEBOOK_NAME)) {
+//			if (mSharedPreferences.contains(EVERNOTE_NOTEBOOK_GUID)) {
+			if (SPManager.getInstance().contains(EVERNOTE_NOTEBOOK_GUID)) {
+				if (!isNotebookExsist(SPManager.getInstance().getString(EVERNOTE_NOTEBOOK_GUID, ""), NOTEBOOK_NAME)) {
 					createNotebook(NOTEBOOK_NAME);
 				}
 			} else {
-				List<Notebook> books = mEvernoteSession.getClientFactory()
-						.createNoteStore()
-						.listNotebooks(mEvernoteSession.getAuthToken());
+				List<Notebook> books = mEvernoteSession.getEvernoteClientFactory()
+                        .getNoteStoreClient()
+						.listNotebooks();
 				int count = books.size();
 				for (int i = 0; i < count; i++) {
 					Notebook book = books.get(i);
 					if (book.getName().equals(NotebookName)) {
-						mSharedPreferences
-								.edit()
-								.putString(EVERNOTE_NOTEBOOK_GUID,
-										book.getGuid()).commit();
+//						mSharedPreferences.edit()
+//								.putString(EVERNOTE_NOTEBOOK_GUID, book.getGuid())
+//                                .commit();
+                        SPManager.getInstance().putString(EVERNOTE_NOTEBOOK_GUID, book.getGuid());
 						return;
 					}
 				}
@@ -342,15 +360,16 @@ public class Evernote {
 	private void downloadNote(String guid) {
 		Logger.e(LogTag, "准备添加:" + guid);
 		try {
-			Note note = mEvernoteSession
-					.getClientFactory()
-					.createNoteStore()
-					.getNote(mEvernoteSession.getAuthToken(), guid, true,
-							false, false, false);
+            Note note = mEvernoteSession.getEvernoteClientFactory()
+                    .getNoteStoreClient()
+                    .getNote(guid, true, false, false, false);
 			Logger.e("获取到的文本：" + note.getContent());
-			ContentValues values = Memo.buildInsertMemoFromNote(note)
-					.toInsertContentValues();
-			mContentResolver.insert(MemoProvider.MEMO_URI, values);
+
+//			ContentValues values = MemoEntity.buildInsertMemoFromNote(note)
+//					.toInsertContentValues();
+//			mContentResolver.insert(MemoProvider.MEMO_URI, values);
+            MemoEntity memo = MemoEntity.buildInsertMemoFromNote(note);
+            memoRepository.insertMemo(memo);
 		} catch (TTransportException e) {
 		} catch (EDAMUserException e) {
 		} catch (EDAMSystemException e) {
@@ -359,19 +378,18 @@ public class Evernote {
 		}
 	}
 
-	private void updateLocalNote(String guid, int _id) {
+	private void updateLocalNote(String guid, MemoEntity memo) {
 		Logger.e(LogTag, "准备更新:" + guid);
 		try {
-			Note note = mEvernoteSession
-					.getClientFactory()
-					.createNoteStore()
-					.getNote(mEvernoteSession.getAuthToken(), guid, true,
-							false, false, false);
-			Memo memo = Memo.buildInsertMemoFromNote(note);
-			ContentValues contentValues = memo.toUpdateContentValues();
-			mContentResolver.update(
-					ContentUris.withAppendedId(MemoProvider.MEMO_URI, _id),
-					contentValues, null, null);
+			Note note = mEvernoteSession.getEvernoteClientFactory()
+                    .getNoteStoreClient()
+					.getNote(guid, true, false, false, false);
+//			ContentValues contentValues = memo.toUpdateContentValues();
+//			mContentResolver.update(
+//					ContentUris.withAppendedId(MemoProvider.MEMO_URI, _id),
+//					contentValues, null, null);
+			memo.buildFromNote(note);
+            memoRepository.updateMemo(memo);
 		} catch (TTransportException e) {
 			e.printStackTrace();
 		} catch (EDAMUserException e) {
@@ -392,47 +410,53 @@ public class Evernote {
 		}
 		SyncingDown = true;
 		NoteFilter noteFilter = new NoteFilter();
-		String guid = mSharedPreferences.getString(EVERNOTE_NOTEBOOK_GUID, "");
+//		String guid = mSharedPreferences.getString(EVERNOTE_NOTEBOOK_GUID, "");
+		String guid = SPManager.getInstance().getString(EVERNOTE_NOTEBOOK_GUID, "");
 		noteFilter.setNotebookGuid(guid);
 		NotesMetadataResultSpec notesMetadataResultSpec = new NotesMetadataResultSpec();
 		notesMetadataResultSpec.setIncludeUpdated(true);
 		try {
-			NoteCollectionCounts noteCollectionCounts = mEvernoteSession
-					.getClientFactory()
-					.createNoteStore()
-					.findNoteCounts(mEvernoteSession.getAuthToken(),
-							noteFilter, false);
+			NoteCollectionCounts noteCollectionCounts = mEvernoteSession.getEvernoteClientFactory()
+                    .getNoteStoreClient()
+					.findNoteCounts(noteFilter, false);
 			Map<String, Integer> maps = noteCollectionCounts
 					.getNotebookCounts();
 			if (maps == null || maps.size() == 0)
 				return;
 			int maxcount = maps.get(guid);
-			NotesMetadataList list = mEvernoteSession
-					.getClientFactory()
-					.createNoteStore()
-					.findNotesMetadata(mEvernoteSession.getAuthToken(),
-							noteFilter, 0, maxcount, notesMetadataResultSpec);
+			NotesMetadataList list = mEvernoteSession.getEvernoteClientFactory()
+                    .getNoteStoreClient()
+					.findNotesMetadata(noteFilter, 0, maxcount, notesMetadataResultSpec);
 
-			for (int i = 0; i < list.getNotes().size(); i++) {
-				NoteMetadata note = list.getNotes().get(i);
-				Cursor cursor = mContentResolver.query(MemoProvider.MEMO_URI,
-						new String[] { MemoDB.UPDATEDTIME, MemoDB.ID },
-						MemoDB.ENID + "=?", new String[] { note.getGuid() },
-						null);
-				if (cursor.getCount() != 0) {
-					cursor.moveToNext();
-					if (cursor.getLong(cursor
-							.getColumnIndex(MemoDB.UPDATEDTIME)) != note
-							.getUpdated()) {
-						// 更新数据
-						updateLocalNote(note.getGuid(),
-								cursor.getInt(cursor.getColumnIndex(MemoDB.ID)));
+//			for (int i = 0; i < list.getNotes().size(); i++) {
+//				NoteMetadata note = list.getNotes().get(i);
+//				Cursor cursor = mContentResolver.query(MemoProvider.MEMO_URI,
+//						new String[] { MemoDB.UPDATEDTIME, MemoDB.ID },
+//						MemoDB.ENID + "=?", new String[] { note.getGuid() },
+//						null);
+//				if (cursor.getCount() != 0) {
+//					cursor.moveToNext();
+//					if (cursor.getLong(cursor.getColumnIndex(MemoDB.UPDATEDTIME)) != note.getUpdated()) {
+//						// 更新数据
+//						updateLocalNote(note.getGuid(), cursor.getInt(cursor.getColumnIndex(MemoDB.ID)));
+//					}
+//				} else {
+//					// 添加数据
+//					downloadNote(note.getGuid());
+//				}
+//				cursor.close();
+//			}
+			for (NoteMetadata note : list.getNotes()) {
+				List<MemoEntity> memos = memoRepository.getMemoByEnid(note.getGuid());
+				if (memos.size() > 0) {
+					MemoEntity memo = memos.get(0);
+					if (memo.updatedTime != note.getUpdated()) {
+						//更新数据
+						updateLocalNote(note.getGuid(), memo);
 					}
 				} else {
-					// 添加数据
 					downloadNote(note.getGuid());
 				}
-				cursor.close();
 			}
 
 		} catch (TTransportException e) {
@@ -452,21 +476,48 @@ public class Evernote {
 		}
 		Logger.e(LogTag, "开始同步");
 		SyncingUp = true;
-		Cursor cursor = mContentResolver.query(MemoProvider.ALL_MEMO_URI, null,
-				null, null, null);
-		while (cursor.moveToNext()) {
-			Memo memo = new Memo(cursor);
+//		Cursor cursor = mContentResolver.query(MemoProvider.ALL_MEMO_URI, null, null, null, null);
+//		while (cursor.moveToNext()) {
+//			Memo memo = new Memo(cursor);
+//			if (memo.isNeedSyncDelete()) {
+//				if (deleteNote(memo.toDeleteNote())) {
+//					ContentValues values = new ContentValues();
+//					values.put(MemoDB.SYNCSTATUS, Memo.NEED_NOTHING);
+//					mContentResolver.update(ContentUris.withAppendedId(
+//							MemoProvider.MEMO_URI, memo.getId()), values, null,
+//							null);
+//				}
+//			} else {
+//				if (memo.isNeedSyncUp()) {
+//					if (memo.getEnid() != null && memo.getEnid().length() != 0) {
+//						try {
+//							updateNote(memo);
+//						} catch (Exception e) {
+//							Logger.e(LogTag, "尝试更新的时候出现错误:" + e.getCause());
+//							continue;
+//						}
+//					} else {
+//						try {
+//							createNote(memo);
+//						} catch (Exception e) {
+//							Logger.e(LogTag,
+//									"尝试创建新的Note的时候出现错误:" + e.getCause());
+//							continue;
+//						}
+//					}
+//				}
+//			}
+//		}
+		List<MemoEntity> memos = memoRepository.getAllMemosWithDelete();
+		for (MemoEntity memo : memos) {
 			if (memo.isNeedSyncDelete()) {
 				if (deleteNote(memo.toDeleteNote())) {
-					ContentValues values = new ContentValues();
-					values.put(MemoDB.SYNCSTATUS, Memo.NEED_NOTHING);
-					mContentResolver.update(ContentUris.withAppendedId(
-							MemoProvider.MEMO_URI, memo.getId()), values, null,
-							null);
+					memo.syncStatus = MemoEntity.NEED_NOTHING;
+					memoRepository.updateMemo(memo);
 				}
 			} else {
 				if (memo.isNeedSyncUp()) {
-					if (memo.getEnid() != null && memo.getEnid().length() != 0) {
+					if (memo.enid != null && memo.enid.length() != 0) {
 						try {
 							updateNote(memo);
 						} catch (Exception e) {
@@ -477,16 +528,16 @@ public class Evernote {
 						try {
 							createNote(memo);
 						} catch (Exception e) {
-							Logger.e(LogTag,
-									"尝试创建新的Note的时候出现错误:" + e.getCause());
+							Logger.e(LogTag, "尝试创建新的Note的时候出现错误:" + e.getCause());
 							continue;
 						}
 					}
 				}
 			}
 		}
+
 		SyncingUp = false;
-		cursor.close();
+//		cursor.close();
 	}
 
 	public synchronized void sync(final boolean syncUp, final boolean syncDown,

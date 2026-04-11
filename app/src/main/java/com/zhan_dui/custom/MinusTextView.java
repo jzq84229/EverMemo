@@ -8,7 +8,7 @@ import android.view.WindowManager;
 import android.widget.TextView;
 
 @SuppressWarnings("deprecation")
-public class MinusTextView extends TextView {
+public class MinusTextView extends androidx.appcompat.widget.AppCompatTextView {
 
 	private static int width;
 

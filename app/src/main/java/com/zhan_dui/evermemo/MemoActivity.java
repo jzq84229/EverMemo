@@ -21,7 +21,7 @@ import android.widget.EditText;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
 
-import com.zhan_dui.data.Memo;
+import com.zhan_dui.data.MemoEntity;
 import com.zhan_dui.sync.Evernote;
 import com.zhan_dui.viewmodel.MemoViewModel;
 
@@ -33,7 +33,7 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 		OnKeyListener {
 
 	private EditText mContentEditText;
-	private Memo memo;
+	private MemoEntity memo;
 	private boolean mCreateNew;
 	private Context mContext;
 	private MemoViewModel mMemoViewModel;
@@ -63,19 +63,19 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 		setContentView(R.layout.activity_memo);
 		mContentEditText = (EditText) findViewById(R.id.content);
 		Bundle bundle = getIntent().getExtras();
-		if (bundle != null && bundle.getSerializable("memo") != null) {
-			memo = (Memo) bundle.getSerializable("memo");
+		if (bundle != null && bundle.getParcelable(Constants.EXTRA_MEMO) != null) {
+			memo = bundle.getParcelable(Constants.EXTRA_MEMO);
+//			memo = (MemoEntity) bundle.getSerializable("memo");
 			mCreateNew = false;
-			mLastSaveContent = memo.getContent();
+			mLastSaveContent = memo.content;
 		} else {
-			memo = new Memo();
+			memo = new MemoEntity();
 			mCreateNew = true;
 		}
 
-		mContentEditText.setText(Html.fromHtml(memo.getContent()));
+		mContentEditText.setText(Html.fromHtml(memo.content));
 		if (mCreateNew) {
-			getWindow().setSoftInputMode(
-					WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
+			getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_VISIBLE);
 			mContentEditText.requestFocus();
 //			MobclickAgent.onEvent(mContext, "new_memo");
 		} else {
@@ -84,7 +84,7 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 
 		mContentEditText.setOnKeyListener(this);
 		mMemoViewModel = new ViewModelProvider(this).get(MemoViewModel.class);
-		mEvernote = new Evernote(mContext);
+		mEvernote = new Evernote(this);
 		findViewById(R.id.edit_container).setOnClickListener(this);
 	}
 
@@ -105,8 +105,7 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 		if (v.getId() == R.id.edit_container) {
 			InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
 			inputMethodManager.toggleSoftInputFromWindow(
-					findViewById(R.id.edit_container)
-							.getApplicationWindowToken(),
+					findViewById(R.id.edit_container).getApplicationWindowToken(),
 					InputMethodManager.SHOW_FORCED, 0);
 		}
 	}
@@ -114,13 +113,10 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 	private void share() {
 		Intent shareIntent = new Intent(Intent.ACTION_SEND);
 		shareIntent.setType("text/plain");
-		shareIntent.putExtra(android.content.Intent.EXTRA_TITLE,
-				getText(R.string.share_title));
-		shareIntent.putExtra(android.content.Intent.EXTRA_TEXT,
-				mContentEditText.getText());
+		shareIntent.putExtra(android.content.Intent.EXTRA_TITLE, getText(R.string.share_title));
+		shareIntent.putExtra(android.content.Intent.EXTRA_TEXT, mContentEditText.getText());
 
-		startActivity(Intent.createChooser(shareIntent,
-				getText(R.string.share_via)));
+		startActivity(Intent.createChooser(shareIntent, getText(R.string.share_via)));
 	}
 
 	private boolean clickEnter() {
@@ -129,12 +125,10 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 		String currentText = mContentEditText.getText().toString();
 		StringBuffer contentBuffer = new StringBuffer(currentText);
 		int maxEnd = contentBuffer.length();
-		int before3 = ((currentPosition - mBullet.length()) < 0) ? 0
-				: (currentPosition - mBullet.length());
+		int before3 = Math.max((currentPosition - mBullet.length()), 0);
 		int start = currentText.lastIndexOf(mNewLine, currentPosition - 1) + 1;
 		start = (start == -1) ? 0 : start;
-		int end = ((start + mBullet.length()) > maxEnd) ? maxEnd
-				: (start + mBullet.length());
+		int end = Math.min((start + mBullet.length()), maxEnd);
 
 		if (contentBuffer.substring(start, end).equals(mBullet)) {
 			if (maxEnd == end) {
@@ -151,11 +145,7 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 			} else {
 				contentBuffer.insert(currentPosition, mNewLine + mBullet);
 				mContentEditText.setText(contentBuffer);
-				newPosition = ((currentPosition + mBullet.length() + mNewLine
-						.length()) > contentBuffer.length()) ? contentBuffer
-						.length()
-						: (currentPosition + mBullet.length() + mNewLine
-								.length());
+				newPosition = Math.min((currentPosition + mBullet.length() + mNewLine.length()), contentBuffer.length());
 				mContentEditText.setSelection(newPosition);
 			}
 			return true;
@@ -171,13 +161,12 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 		StringBuffer contentBuffer = new StringBuffer(currentText);
 		int maxEnd = contentBuffer.length();
 		int start = currentText.lastIndexOf(mNewLine, currentPosition - 1) + 1;
-		int end = ((start + mBullet.length()) > maxEnd) ? maxEnd
-				: (start + mBullet.length());
+		int end = Math.min((start + mBullet.length()), maxEnd);
 		if (contentBuffer.substring(start, end).equals(mBullet)) {
 			contentBuffer.replace(start, start + mBullet.length(), "");
 			newPosition -= mBullet.length();
-			newPosition = (newPosition < start) ? start : newPosition;
-			newPosition = newPosition < 0 ? 0 : newPosition;
+			newPosition = Math.max(newPosition, start);
+			newPosition = Math.max(newPosition, 0);
 		} else {
 			contentBuffer.insert(start, mBullet);
 			if (currentPosition < currentPosition + mBullet.length()) {
@@ -192,13 +181,11 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 
 	@Override
 	public boolean onKey(View v, int keyCode, KeyEvent event) {
-
 		if (event.getAction() != KeyEvent.KEYCODE_BACK) {
 			mTextChanged = true;
 		}
 
-		if (event.getAction() == KeyEvent.ACTION_DOWN
-				&& keyCode == KeyEvent.KEYCODE_ENTER) {
+		if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) {
 			return clickEnter();
 		}
 		return false;
@@ -206,7 +193,7 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 
 	private void saveMemo(Boolean toLeave) {
 		if (mCreateNew
-				&& mContentEditText.getText().toString().trim().length() == 0) {
+				&& mContentEditText.getText().toString().trim().isEmpty()) {
 			return;
 		}
 
@@ -219,17 +206,18 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 		}
 		memo.setContent(Html.toHtml(mContentEditText.getText()));
 		memo.setCursorPosition(mContentEditText.getSelectionStart());
-		memo.setUpdatedTime(System.currentTimeMillis());
+		memo.syncStatus = MemoEntity.NEED_SYNC_UP;
+		memo.updatedTime = System.currentTimeMillis();
 		if (mCreateNew) {
-			Uri resultUri = mMemoViewModel.createMemo(memo.getContent());
-			if (resultUri != null) {
+			long id = mMemoViewModel.createMemo(memo);
+			if (id > 0) {
 				mCreateNew = false;
-				memo.setId(Integer.parseInt(resultUri.getLastPathSegment()));
+				memo._id = id;
 			}
 		} else {
 			if (mContentEditText.getText().toString().trim().length() == 0) {
 				// Empty content means delete
-				mMemoViewModel.deleteMemo(memo.getId());
+				mMemoViewModel.deleteMemo(memo);
 				mCreateNew = true;
 			} else {
 				mMemoViewModel.updateMemo(memo);
@@ -280,15 +268,11 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 			builder.setMessage(R.string.give_up_edit)
 					.setTitle(R.string.give_up_title)
 					.setPositiveButton(R.string.give_up_sure,
-							new DialogInterface.OnClickListener() {
-
-								@Override
-								public void onClick(DialogInterface dialog,
-										int which) {
-									deleteAndLeave();
+                            (dialog, which) -> {
+                                deleteAndLeave();
 //									MobclickAgent.onEvent(mContext, "delete_memo");
-								}
-							}).setNegativeButton(R.string.give_up_cancel, null)
+                            })
+					.setNegativeButton(R.string.give_up_cancel, null)
 					.create().show();
 			return true;
 		} else if (itemId == R.id.share_to) {
@@ -315,12 +299,11 @@ public class MemoActivity extends AppCompatActivity implements OnClickListener,
 	}
 
 	private void deleteAndLeave() {
-		if (memo.getId() != 0) {
-			mMemoViewModel.deleteMemo(memo.getId());
+		if (memo._id != 0) {
+			mMemoViewModel.deleteMemo(memo);
 			mEvernote.sync(true, false, null);
 		}
-		getWindow().setSoftInputMode(
-				WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+		getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 		finish();
 		overridePendingTransition(R.anim.out_push_up, R.anim.out_push_down);
 	}

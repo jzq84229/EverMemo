@@ -102,7 +102,7 @@ class AppDatabaseTest {
         memoDao.insert(memo2)
         memoDao.insert(memo3)
 
-        val allMemos = memoDao.getAllMemos()
+        val allMemos = memoDao.allMemos
 
         // Use LiveData observer to get actual values
         var memosList: List<MemoEntity>? = null
@@ -128,7 +128,7 @@ class AppDatabaseTest {
         memoDao.insert(memo2)
         memoDao.insert(memo3)
 
-        val memosNeedingSync = memoDao.getMemosNeedingSync()
+        val memosNeedingSync = memoDao.memosNeedingSync
 
         assertEquals(2, memosNeedingSync.size) // Should have 2 memos needing sync
         assertTrue(memosNeedingSync.all { it.syncStatus != Memo.NEED_NOTHING })
@@ -157,7 +157,7 @@ class AppDatabaseTest {
         memoDao.insert(activeMemo)
         memoDao.insert(deletedMemo)
 
-        val allMemos = memoDao.getAllMemos()
+        val allMemos = memoDao.allMemos
 
         var memosList: List<MemoEntity>? = null
         allMemos.observeForever { memos ->

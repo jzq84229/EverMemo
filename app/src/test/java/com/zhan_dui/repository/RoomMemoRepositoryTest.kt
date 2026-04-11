@@ -95,7 +95,7 @@ class RoomMemoRepositoryTest {
         val liveData = MutableLiveData<List<MemoEntity>>().apply {
             value = testEntities
         }
-        whenever(mockMemoDao.getAllMemos()).thenReturn(liveData)
+        whenever(mockMemoDao.allMemos).thenReturn(liveData)
 
         // When
         val result = repository.getAllMemos()
@@ -247,7 +247,7 @@ class RoomMemoRepositoryTest {
             createTestMemoEntity(1, "Memo 1", Memo.NEED_SYNC_UP),
             createTestMemoEntity(2, "Memo 2", Memo.NEED_SYNC_DELETE)
         )
-        whenever(mockMemoDao.getMemosNeedingSync()).thenReturn(testEntities)
+        whenever(mockMemoDao.memosNeedingSync).thenReturn(testEntities)
 
         // When
         val result = repository.getMemosNeedingSync()

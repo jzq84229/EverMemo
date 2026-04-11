@@ -3,11 +3,7 @@ package com.zhan_dui.viewmodel
 import android.app.Application
 import android.net.Uri
 import androidx.arch.core.executor.testing.InstantTaskExecutorRule
-import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.zhan_dui.data.Memo
-import com.zhan_dui.data.MemoProvider
-import com.zhan_dui.repository.RoomMemoRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -15,6 +11,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -23,7 +20,6 @@ import org.mockito.Mock
 import org.mockito.junit.MockitoJUnitRunner
 import org.mockito.kotlin.*
 import java.util.*
-import org.junit.Assert.*
 
 @ExperimentalCoroutinesApi
 @RunWith(MockitoJUnitRunner::class)

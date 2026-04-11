@@ -5,14 +5,11 @@ import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.preference.PreferenceManager;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -30,12 +27,11 @@ import androidx.lifecycle.ViewModelProvider;
 import com.evernote.client.android.EvernoteSession;
 import com.huewu.pla.lib.MultiColumnListView;
 import com.zhan_dui.adapters.MemoListAdapter;
-import com.zhan_dui.adapters.MemosAdapter.ItemLongPressedLisener;
-import com.zhan_dui.adapters.MemosAdapter.onItemSelectLisener;
-import com.zhan_dui.data.Memo;
+import com.zhan_dui.data.MemoEntity;
 import com.zhan_dui.sync.Evernote;
 import com.zhan_dui.utils.Logger;
 import com.zhan_dui.utils.MarginAnimation;
+import com.zhan_dui.utils.SPManager;
 import com.zhan_dui.viewmodel.MemoViewModel;
 
 import java.util.List;
@@ -43,15 +39,14 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class StartActivity extends AppCompatActivity implements
-        OnClickListener, ItemLongPressedLisener,
-        onItemSelectLisener, MemoListAdapter.ItemLongPressedListener,
-        MemoListAdapter.OnItemSelectListener {
+        OnClickListener, MemoListAdapter.ItemLongPressedListener,
+        MemoListAdapter.OnItemSelectListener, MemoListAdapter.OnDeleteMemosListener {
 
     private MultiColumnListView mMemosGrid;
     private Context mContext;
     private MemoListAdapter mMemosAdapter;
     private LinearLayout mBindEvernotePanel;
-    private SharedPreferences mSharedPreferences;
+//    private SharedPreferences mSharedPreferences;
     private Button mBindEvernote;
     private int mBindEvernotePandelHeight;
     public static Evernote mEvernote;
@@ -65,7 +60,7 @@ public class StartActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         getSupportActionBar().setLogo(R.drawable.ab_logo);
         mContext = this;
-        mEvernote = new Evernote(mContext);
+        mEvernote = new Evernote(this);
 //		MobclickAgent.onError(this);
         setContentView(R.layout.activity_start);
         mMemosGrid = (MultiColumnListView) findViewById(R.id.memos);
@@ -73,7 +68,7 @@ public class StartActivity extends AppCompatActivity implements
         mBindEvernote = (Button) findViewById(R.id.bind_evernote);
         mBindEvernotePandelHeight = mBindEvernotePanel.getLayoutParams().height;
 
-        mMemosAdapter = new MemoListAdapter(mContext, this, this);
+        mMemosAdapter = new MemoListAdapter(mContext, this, this, this);
         mMemosGrid.setAdapter(mMemosAdapter);
 
         mMemoViewModel = new ViewModelProvider(this).get(MemoViewModel.class);
@@ -82,12 +77,11 @@ public class StartActivity extends AppCompatActivity implements
             updateMemosAdapter(memos);
         });
 
-        mSharedPreferences = PreferenceManager
-                .getDefaultSharedPreferences(mContext);
+//        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
 
-        if (mSharedPreferences.getInt(sStartCount, 1) == 1) {
-            mBindEvernotePanel.startAnimation(new MarginAnimation(
-                    mBindEvernotePanel, 0, 0, 0, 0, 600));
+
+        if (SPManager.getInstance().getInt(sStartCount, 1) == 1) {
+            mBindEvernotePanel.startAnimation(new MarginAnimation(mBindEvernotePanel, 0, 0, 0, 0, 600));
             new Timer().schedule(new TimerTask() {
 
                 @Override
@@ -102,14 +96,15 @@ public class StartActivity extends AppCompatActivity implements
                     });
                 }
             }, 5000);
-            mSharedPreferences
-                    .edit()
-                    .putInt(sStartCount, mSharedPreferences.getInt(sStartCount, 1) + 1)
-                    .commit();
+//            mSharedPreferences
+//                    .edit()
+//                    .putInt(sStartCount, mSharedPreferences.getInt(sStartCount, 1) + 1)
+//                    .commit();
+            SPManager.getInstance().putInt(sStartCount, SPManager.getInstance().getInt(sStartCount, 1) + 1);
             mBindEvernote.setOnClickListener(this);
         }
 
-        if (mSharedPreferences.getBoolean(
+        if (SPManager.getInstance().getBoolean(
                 SettingActivity.OPEN_MEMO_WHEN_START_UP, false)) {
             startActivity(new Intent(this, MemoActivity.class));
         }
@@ -130,7 +125,8 @@ public class StartActivity extends AppCompatActivity implements
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
-            case EvernoteSession.REQUEST_CODE_OAUTH:
+//            case EvernoteSession.REQUEST_CODE_OAUTH:
+            case EvernoteSession.REQUEST_CODE_LOGIN:
                 mEvernote.onAuthFinish(resultCode);
                 break;
         }
@@ -145,6 +141,7 @@ public class StartActivity extends AppCompatActivity implements
 
         if (mMenu != null) {
             MenuItem syncItem = mMenu.findItem(R.id.sync);
+            Logger.i("====isLoggedIn: " + mEvernote.isLogin());
             if (!mEvernote.isLogin()) {
                 syncItem.setTitle(R.string.menu_bind);
             } else {
@@ -152,50 +149,32 @@ public class StartActivity extends AppCompatActivity implements
             }
         }
 
-        if (mSharedPreferences.getInt(MemoActivity.sEditCount, 0) == 5
-                && mSharedPreferences.getBoolean(sShownRate, false) == false) {
+        if (SPManager.getInstance().getInt(MemoActivity.sEditCount, 0) == 5
+                && SPManager.getInstance().getBoolean(sShownRate, false) == false) {
 
             AlertDialog.Builder builder = new AlertDialog.Builder(mContext);
             builder.setMessage(R.string.rate_for_evernote)
                     .setPositiveButton(R.string.rate_rate,
-                            new DialogInterface.OnClickListener() {
-
-                                @Override
-                                public void onClick(DialogInterface dialog,
-                                                    int which) {
-                                    Uri uri = Uri.parse("market://details?id="
-                                            + mContext.getPackageName());
-                                    Intent goToMarket = new Intent(
-                                            Intent.ACTION_VIEW, uri);
-                                    try {
-                                        startActivity(goToMarket);
-                                    } catch (ActivityNotFoundException e) {
-                                        Toast.makeText(mContext,
-                                                R.string.can_not_open_market,
-                                                Toast.LENGTH_SHORT).show();
-                                    }
+                            (dialog, which) -> {
+                                Uri uri = Uri.parse("market://details?id=" + mContext.getPackageName());
+                                Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
+                                try {
+                                    startActivity(goToMarket);
+                                } catch (ActivityNotFoundException e) {
+                                    Toast.makeText(mContext, R.string.can_not_open_market, Toast.LENGTH_SHORT).show();
                                 }
                             })
                     .setNegativeButton(R.string.rate_feedback,
-                            new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialog,
-                                                    int which) {
-                                    Intent Email = new Intent(
-                                            Intent.ACTION_SEND);
-                                    Email.setType("text/email");
-                                    Email.putExtra(
-                                            Intent.EXTRA_EMAIL,
-                                            new String[]{getString(R.string.team_email)});
-                                    Email.putExtra(Intent.EXTRA_SUBJECT,
-                                            getString(R.string.feedback));
-                                    Email.putExtra(Intent.EXTRA_TEXT,
-                                            getString(R.string.email_title));
-                                    startActivity(Intent.createChooser(Email,
-                                            getString(R.string.email_chooser)));
-                                }
+                            (dialog, which) -> {
+                                Intent Email = new Intent(Intent.ACTION_SEND);
+                                Email.setType("text/email");
+                                Email.putExtra(Intent.EXTRA_EMAIL, new String[]{getString(R.string.team_email)});
+                                Email.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.feedback));
+                                Email.putExtra(Intent.EXTRA_TEXT, getString(R.string.email_title));
+                                startActivity(Intent.createChooser(Email, getString(R.string.email_chooser)));
                             }).create().show();
-            mSharedPreferences.edit().putBoolean(sShownRate, true).commit();
+//            mSharedPreferences.edit().putBoolean(sShownRate, true).commit();
+            SPManager.getInstance().putBoolean(sShownRate, true);
         }
         mSyncTimer = new Timer();
         Logger.e("启动自动更新任务");
@@ -248,12 +227,10 @@ public class StartActivity extends AppCompatActivity implements
         } else if (itemId == R.id.feedback) {
             Intent Email = new Intent(Intent.ACTION_SEND);
             Email.setType("text/email");
-            Email.putExtra(Intent.EXTRA_EMAIL,
-                    new String[]{getString(R.string.team_email)});
+            Email.putExtra(Intent.EXTRA_EMAIL, new String[]{getString(R.string.team_email)});
             Email.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.feedback));
             Email.putExtra(Intent.EXTRA_TEXT, getString(R.string.email_title));
-            startActivity(Intent.createChooser(Email,
-                    getString(R.string.email_chooser)));
+            startActivity(Intent.createChooser(Email, getString(R.string.email_chooser)));
             return true;
         }
         return false;
@@ -294,23 +271,16 @@ public class StartActivity extends AppCompatActivity implements
             int itemId = menuItem.getItemId();
             if (itemId == R.id.delete) {
                 if (mMemosAdapter.getSelectedCount() == 0) {
-                    Toast.makeText(mContext, R.string.delete_select_nothing,
-                            Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mContext, R.string.delete_select_nothing, Toast.LENGTH_SHORT).show();
                 } else {
                     Builder builder = new Builder(mContext);
                     builder.setMessage(R.string.delete_all_confirm)
                             .setTitle(R.string.delete_title)
                             .setPositiveButton(R.string.delete_sure,
-                                    new DialogInterface.OnClickListener() {
-
-                                        @Override
-                                        public void onClick(
-                                                DialogInterface dialog,
-                                                int which) {
-                                            mMemosAdapter.deleteSelectedMemos();
-                                            if (mActionMode != null) {
-                                                mActionMode.finish();
-                                            }
+                                    (dialog, which) -> {
+                                        mMemosAdapter.deleteSelectedMemos();
+                                        if (mActionMode != null) {
+                                            mActionMode.finish();
                                         }
                                     })
                             .setNegativeButton(R.string.delete_cancel, null)
@@ -376,7 +346,16 @@ public class StartActivity extends AppCompatActivity implements
         updateActionMode();
     }
 
-    private void updateMemosAdapter(List<Memo> memos) {
+    @Override
+    public void onDeleteMemos(List<MemoEntity> memos) {
+        for (MemoEntity memo : memos) {
+            mMemoViewModel.deleteMemo(memo);
+        }
+        // Sync after deletion
+        mEvernote.sync(true, false, null);
+    }
+
+    private void updateMemosAdapter(List<MemoEntity> memos) {
         if (memos == null) {
             return;
         }

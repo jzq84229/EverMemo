@@ -6,9 +6,9 @@ import java.util.Properties
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.kapt")
+    id("kotlin-parcelize")
 }
-
-
 
 val props = Properties()
 val inputStream = project.rootProject.file("custom.properties").inputStream()
@@ -127,19 +127,35 @@ dependencies {
     implementation(fileTree("libs") {
         include("*.jar")
     })
+//    implementation("androidx.appcompat:appcompat:1.6.1")
+//    implementation("androidx.core:core:1.12.0")
+//    implementation("androidx.recyclerview:recyclerview:1.3.2")
+//    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
+//    implementation("androidx.lifecycle:lifecycle-viewmodel:2.7.0")
+//    implementation("androidx.lifecycle:lifecycle-livedata:2.7.0")
+//    implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:2.7.0")
+//    implementation("androidx.lifecycle:lifecycle-common-java8:2.7.0")
+//    implementation("androidx.room:room-runtime:2.6.0")
+//    annotationProcessor("androidx.room:room-compiler:2.6.0")
+//    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.0")
+//    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("androidx.appcompat:appcompat:1.6.1")
     implementation("androidx.core:core:1.12.0")
-    implementation("androidx.recyclerview:recyclerview:1.3.2")
-    implementation("androidx.constraintlayout:constraintlayout:2.1.4")
-    implementation("androidx.lifecycle:lifecycle-viewmodel:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-livedata:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-viewmodel-savedstate:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-common-java8:2.7.0")
-    implementation("androidx.room:room-runtime:2.6.0")
-    annotationProcessor("androidx.room:room-compiler:2.6.0")
-    implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
-    implementation(project(":libraries:EverNoteEx"))
+    implementation("androidx.core:core-ktx:1.9.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.6.2")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.2")
+//    implementation("ndroidx.lifecycle:lifecycle-runtime-ktx:2.4.0")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.4.0")
+
+
+    val roomVersion = "2.6.0"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    kapt("androidx.room:room-compiler:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+
+//    implementation("com.yinxiang:android-sdk:2.0.0-RC4")
+//    implementation(project(":libraries:EverNoteEx"))
+    implementation(project(":libraries:EverNoteExN"))
     implementation(project(":libraries:ExGridView"))
 //    // 友盟基础组件库（所有友盟业务SDK都依赖基础组件库
 //    implementation  'com.umeng.umsdk:common:+'// 必选

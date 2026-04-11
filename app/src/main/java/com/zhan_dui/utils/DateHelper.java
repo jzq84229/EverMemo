@@ -11,8 +11,7 @@ import android.content.Context;
 @SuppressLint("SimpleDateFormat")
 public class DateHelper {
 
-	private static final SimpleDateFormat sMemoShowDateFormat = new SimpleDateFormat(
-			"M.d a h:m");
+	private static final SimpleDateFormat sMemoShowDateFormat = new SimpleDateFormat("M.d a h:m");
 
 	private static final PrettyTime PRETTY_TIME = new PrettyTime();
 

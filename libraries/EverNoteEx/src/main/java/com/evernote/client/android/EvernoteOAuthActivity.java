@@ -41,6 +41,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.Window;
+import android.webkit.CookieManager;
 import android.webkit.WebChromeClient;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -48,6 +49,7 @@ import android.widget.Toast;
 import com.evernote.androidsdk.R;
 import com.evernote.client.oauth.EvernoteAuthToken;
 import com.evernote.client.oauth.YinxiangApi;
+import com.evernote.client.oauth.YinxiangSandboxApi;
 import com.evernote.edam.userstore.BootstrapInfo;
 import com.evernote.edam.userstore.BootstrapProfile;
 import org.scribe.builder.ServiceBuilder;
@@ -147,6 +149,8 @@ public class EvernoteOAuthActivity extends AppCompatActivity {
 		mWebView.setWebViewClient(mWebViewClient);
 		mWebView.setWebChromeClient(mWebChromeClient);
 		mWebView.getSettings().setJavaScriptEnabled(true);
+		mWebView.getSettings().setDomStorageEnabled(true);
+		CookieManager.getInstance().setAcceptCookie(true);
 
 		if (savedInstanceState != null) {
 			mEvernoteService = savedInstanceState
@@ -259,7 +263,8 @@ public class EvernoteOAuthActivity extends AppCompatActivity {
 		}
 
 		if (host.equals(EvernoteSession.HOST_SANDBOX)) {
-			apiClass = EvernoteApi.Sandbox.class;
+//			apiClass = EvernoteApi.Sandbox.class;
+            apiClass = YinxiangSandboxApi.class;
 		} else if (host.equals(EvernoteSession.HOST_PRODUCTION)) {
 			apiClass = EvernoteApi.class;
 		} else if (host.equals(EvernoteSession.HOST_CHINA)) {

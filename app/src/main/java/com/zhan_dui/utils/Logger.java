@@ -2,11 +2,12 @@ package com.zhan_dui.utils;
 
 import android.util.Log;
 
+import com.zhan_dui.evermemo.BuildConfig;
 import com.zhan_dui.evermemo.MemoActivity;
 
 public class Logger {
 
-	public static Boolean DEBUG = false;
+	public static Boolean DEBUG = BuildConfig.DEBUG;
 	public static String Tag = "调试信息";
 	public static String[] Filters = { MemoActivity.LogTag };
 

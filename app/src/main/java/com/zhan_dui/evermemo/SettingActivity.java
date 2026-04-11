@@ -42,11 +42,9 @@ public class SettingActivity extends AppCompatActivity implements
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        overridePendingTransition(R.anim.in_push_right_to_left,
-                R.anim.in_stable);
+        overridePendingTransition(R.anim.in_push_right_to_left, R.anim.in_stable);
         mContext = this;
-        mSharedPreferences = PreferenceManager
-                .getDefaultSharedPreferences(mContext);
+        mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activtiy_setting);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -58,7 +56,7 @@ public class SettingActivity extends AppCompatActivity implements
         mBindText = (TextView) findViewById(R.id.bind_text);
         mToggleButton = (ToggleButton) findViewById(R.id.open_toggle);
         mBindEvernote.setOnClickListener(this);
-        mEvernote = new Evernote(mContext, this);
+        mEvernote = new Evernote(this, this);
         if (mEvernote.isLogin()) {
             bindSuccess();
         }
@@ -101,33 +99,17 @@ public class SettingActivity extends AppCompatActivity implements
                 builder.setMessage(R.string.unbind_tips)
                         .setTitle(R.string.unbind_title)
                         .setPositiveButton(R.string.unbind_sure,
-                                new DialogInterface.OnClickListener() {
-
-                                    @Override
-                                    public void onClick(DialogInterface dialog,
-                                                        int which) {
-                                        mEvernote.Logout();
-                                    }
-                                })
+                                (dialog, which) -> mEvernote.Logout())
                         .setNegativeButton(R.string.unbind_cancel,
-                                new DialogInterface.OnClickListener() {
-
-                                    @Override
-                                    public void onClick(DialogInterface dialog,
-                                                        int which) {
-                                        dialog.dismiss();
-                                    }
-                                }).create().show();
+                                (dialog, which) -> dialog.dismiss()).create().show();
             }
         } else if (v.getId() == R.id.rate) {
-            Uri uri = Uri.parse("market://details?id="
-                    + mContext.getPackageName());
+            Uri uri = Uri.parse("market://details?id=" + mContext.getPackageName());
             Intent goToMarket = new Intent(Intent.ACTION_VIEW, uri);
             try {
                 startActivity(goToMarket);
             } catch (ActivityNotFoundException e) {
-                Toast.makeText(mContext, R.string.can_not_open_market,
-                        Toast.LENGTH_SHORT).show();
+                Toast.makeText(mContext, R.string.can_not_open_market, Toast.LENGTH_SHORT).show();
             }
         } else if (v.getId() == R.id.setting_start) {
             mToggleButton.performClick();
@@ -138,7 +120,8 @@ public class SettingActivity extends AppCompatActivity implements
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         switch (requestCode) {
-            case EvernoteSession.REQUEST_CODE_OAUTH:
+//            case EvernoteSession.REQUEST_CODE_OAUTH:
+            case EvernoteSession.REQUEST_CODE_LOGIN:
                 mEvernote.onAuthFinish(resultCode);
                 break;
         }
@@ -169,13 +152,11 @@ public class SettingActivity extends AppCompatActivity implements
     @Override
     public void onLogout(Boolean reuslt) {
         if (reuslt) {
-            Toast.makeText(mContext, R.string.unbind_success,
-                    Toast.LENGTH_SHORT).show();
+            Toast.makeText(mContext, R.string.unbind_success, Toast.LENGTH_SHORT).show();
             findViewById(R.id.bind_arrow).setVisibility(View.VISIBLE);
             mBindText.setText(R.string.bind_evernote);
         } else {
-            Toast.makeText(mContext, R.string.unbind_failed, Toast.LENGTH_SHORT)
-                    .show();
+            Toast.makeText(mContext, R.string.unbind_failed, Toast.LENGTH_SHORT).show();
         }
     }
 

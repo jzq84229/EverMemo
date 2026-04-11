@@ -6,7 +6,7 @@ import android.widget.TextView;
 
 import com.zhan_dui.evermemo.R;
 
-public class MinMaxTextView extends TextView {
+public class MinMaxTextView extends androidx.appcompat.widget.AppCompatTextView {
 
 	private int minHeight;
 	private int maxHeight;

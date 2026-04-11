@@ -10,7 +10,7 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
-import com.zhan_dui.data.Memo;
+import com.zhan_dui.data.MemoEntity;
 import com.zhan_dui.evermemo.MemoActivity;
 import com.zhan_dui.evermemo.R;
 import com.zhan_dui.utils.DateHelper;
@@ -33,30 +33,41 @@ public class MemoListAdapter extends BaseAdapter implements View.OnClickListener
         void onCancelSelect();
     }
 
+    public interface OnDeleteMemosListener {
+        void onDeleteMemos(List<MemoEntity> memoIds);
+    }
+
     private final Context context;
     private final LayoutInflater layoutInflater;
     private final Typeface robotoThin;
 
-    private List<Memo> memos = new ArrayList<>();
+    private List<MemoEntity> memos = new ArrayList<>();
     private boolean checkMode = false;
-    private HashMap<Integer, Memo> checkedItems = new HashMap<>();
+    private HashMap<Long, MemoEntity> checkedItems = new HashMap<>();
 
     private ItemLongPressedListener itemLongPressedLisener;
     private OnItemSelectListener onItemSelectLisener;
+    private OnDeleteMemosListener onDeleteMemosListener;
 
     public MemoListAdapter(Context context, ItemLongPressedListener itemLongPressedLisener,
                           OnItemSelectListener selectLisener) {
+        this(context, itemLongPressedLisener, selectLisener, null);
+    }
+
+    public MemoListAdapter(Context context, ItemLongPressedListener itemLongPressedLisener,
+                          OnItemSelectListener selectLisener, OnDeleteMemosListener deleteListener) {
         this.context = context;
         this.layoutInflater = LayoutInflater.from(context);
         this.robotoThin = Typeface.createFromAsset(context.getAssets(), "fonts/Roboto-Thin.ttf");
         this.itemLongPressedLisener = itemLongPressedLisener;
         this.onItemSelectLisener = selectLisener;
+        this.onDeleteMemosListener = deleteListener;
     }
 
     /**
      * Update the adapter with new memo data
      */
-    public void setMemos(List<Memo> memos) {
+    public void setMemos(List<MemoEntity> memos) {
         if (memos == null) {
             this.memos = new ArrayList<>();
         } else {
@@ -96,7 +107,7 @@ public class MemoListAdapter extends BaseAdapter implements View.OnClickListener
         }
         int memoIndex = position - 1;
         if (memoIndex >= 0 && memoIndex < memos.size()) {
-            return memos.get(memoIndex).getId();
+            return memos.get(memoIndex)._id;
         }
         return -1;
     }
@@ -122,7 +133,7 @@ public class MemoListAdapter extends BaseAdapter implements View.OnClickListener
             // Memo item
             int memoIndex = position - 1;
             if (memoIndex >= 0 && memoIndex < memos.size()) {
-                Memo memo = memos.get(memoIndex);
+                MemoEntity memo = memos.get(memoIndex);
                 return createMemoItemView(memoIndex, memo, convertView, parent);
             }
         }
@@ -147,7 +158,7 @@ public class MemoListAdapter extends BaseAdapter implements View.OnClickListener
         return view;
     }
 
-    private View createMemoItemView(int position, Memo memo, View convertView, ViewGroup parent) {
+    private View createMemoItemView(int position, MemoEntity memo, View convertView, ViewGroup parent) {
         View view;
         boolean isFirst = false; // Not used in this adapter, but kept for compatibility
 
@@ -173,23 +184,23 @@ public class MemoListAdapter extends BaseAdapter implements View.OnClickListener
         View uploadView = view.findViewById(R.id.uploading);
 
         if (contentTextView != null) {
-            contentTextView.setText(Html.fromHtml(memo.getContent()));
+            contentTextView.setText(Html.fromHtml(memo.content));
         }
 
         if (dateTextView != null) {
-            dateTextView.setText(DateHelper.getGridDate(context, memo.getCreatedTime()));
+            dateTextView.setText(DateHelper.getGridDate(context, memo.createdTime));
         }
 
         if (hoverView != null) {
             hoverView.setTag(R.string.memo_data, memo);
-            hoverView.setTag(R.string.memo_id, memo.getId());
+            hoverView.setTag(R.string.memo_id, memo._id);
             hoverView.setTag(R.string.memo_position, position + 1); // +1 because position 0 is "add" item
             hoverView.setOnClickListener(this);
             hoverView.setOnLongClickListener(this);
 
             // Set background based on check mode
             if (checkMode) {
-                if (isChecked(memo.getId())) {
+                if (isChecked(memo._id)) {
                     hoverView.setBackgroundResource(R.drawable.hover_multi_background_normal);
                 } else {
                     hoverView.setBackgroundResource(R.drawable.hover_border_normal);
@@ -217,9 +228,9 @@ public class MemoListAdapter extends BaseAdapter implements View.OnClickListener
             context.startActivity(new Intent(context, MemoActivity.class));
         } else {
             if (v.getId() == R.id.hover) {
-                Memo memo = (Memo) v.getTag(R.string.memo_data);
+                MemoEntity memo = (MemoEntity) v.getTag(R.string.memo_data);
                 if (checkMode) {
-                    toggleCheckedId(memo.getId(), memo, v);
+                    toggleCheckedId(memo._id, memo, v);
                 } else {
                     Intent intent = new Intent(context, MemoActivity.class);
                     intent.putExtra("memo", memo);
@@ -237,8 +248,8 @@ public class MemoListAdapter extends BaseAdapter implements View.OnClickListener
             }
             setCheckMode(true);
         }
-        Memo memo = (Memo) v.getTag(R.string.memo_data);
-        toggleCheckedId(memo.getId(), memo, v);
+        MemoEntity memo = (MemoEntity) v.getTag(R.string.memo_data);
+        toggleCheckedId(memo._id, memo, v);
         return true;
     }
 
@@ -251,7 +262,7 @@ public class MemoListAdapter extends BaseAdapter implements View.OnClickListener
         notifyDataSetChanged();
     }
 
-    public void toggleCheckedId(int id, Memo memo, View v) {
+    public void toggleCheckedId(Long id, MemoEntity memo, View v) {
         if (checkedItems.containsKey(id)) {
             checkedItems.remove(id);
             if (onItemSelectLisener != null) {
@@ -269,7 +280,7 @@ public class MemoListAdapter extends BaseAdapter implements View.OnClickListener
         notifyDataSetChanged();
     }
 
-    public boolean isChecked(int id) {
+    public boolean isChecked(Long id) {
         return checkedItems.containsKey(id);
     }
 
@@ -282,23 +293,23 @@ public class MemoListAdapter extends BaseAdapter implements View.OnClickListener
             return;
         }
 
-        // In a real implementation, this would delete from the database
-        // For now, just remove from the list
-        for (Integer id : checkedItems.keySet()) {
-            // Remove memo with this ID from the list
-            for (int i = 0; i < memos.size(); i++) {
-                if (memos.get(i).getId() == id) {
-                    memos.remove(i);
-                    break;
-                }
-            }
+        // Collect IDs to delete
+        List<MemoEntity> idsToDelete = new ArrayList<>(checkedItems.values());
+
+        // Notify listener to delete from database
+        if (onDeleteMemosListener != null) {
+            onDeleteMemosListener.onDeleteMemos(idsToDelete);
         }
+
+        // Clear selection
         checkedItems.clear();
 
         if (onItemSelectLisener != null) {
             onItemSelectLisener.onCancelSelect();
         }
 
+        // Note: The LiveData from ViewModel will automatically update the adapter
+        // so we don't need to modify the local list here
         notifyDataSetChanged();
     }
 

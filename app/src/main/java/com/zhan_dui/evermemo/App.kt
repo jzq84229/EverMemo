@@ -7,6 +7,7 @@ import com.evernote.client.android.EvernoteSession
 import com.tencent.bugly.crashreport.CrashReport
 import com.tencent.bugly.crashreport.CrashReport.UserStrategy
 import com.tencent.shiply.integration.ShiplyParams
+import com.zhan_dui.utils.SPManager
 
 
 class App : Application() {
@@ -15,6 +16,7 @@ class App : Application() {
         super.onCreate()
         initBugly()
         initShiply()
+        SPManager.getInstance().init(this)
     }
 
     override fun attachBaseContext(base: Context?) {

@@ -22,7 +22,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "EverMemo"
 include(":app")
-include(":libraries:EverNoteEx")
+//include(":libraries:EverNoteEx")
+include(":libraries:EverNoteExN")
 include(":libraries:ExGridView")
 
 val props = Properties()
